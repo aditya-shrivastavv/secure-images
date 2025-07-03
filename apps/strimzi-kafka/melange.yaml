@@ -1,1 +1,21 @@
-something
+package:
+  name: strimzi-kafka
+  version: 0.46.1
+
+environment:
+  contents:
+    repositories:
+      - https://packages.wolfi.dev/os
+    keyring:
+      - https://packages.wolfi.dev/os/wolfi-signing.rsa.pub
+    packages:
+      - make
+      - mvn
+
+pipeline:
+  - name: fetch
+  - name: Build
+    runs: |
+      set -x
+      make clean
+      make all
