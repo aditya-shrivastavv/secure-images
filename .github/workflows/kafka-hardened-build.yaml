@@ -1,0 +1,39 @@
+name: Weekly kafka build
+
+on:
+  # schedule:
+  #   - cron: '30 20 * * *' # Runs at 2:00 AM IST (20:30 UTC)
+  workflow_dispatch:
+
+jobs:
+  build-scan:
+    runs-on: ubuntu-latest
+    env:
+      PACKAGE: kafka
+      VERSION: 4.0.0
+      STRIMZI_KAFKA_OPERATOR_NAME: strimzi/strimzi-kafka-operator
+      STRIMZI_KAFKA_OPERATOR_VERSION: 0.46.1
+
+    steps:
+      - name: Checkout Repo (secure-images)
+        uses: actions/checkout@4
+
+      - name: Setup Docker Buildx
+        uses: docker/setup-buildx-action@v3.11.1
+
+      - name: Setup Melange & Apko
+        shell: bash
+        run: |
+          curl -sSL https://github.com/chainguard-dev/apko/releases/latest/download/apko-linux-amd64 -o /usr/local/bin/apko
+          curl -sSL https://github.com/chainguard-dev/melange/releases/latest/download/melange-linux-amd64 -o /usr/local/bin/melange
+          chmod +x /usr/local/bin/{apko,melange}
+
+      - name: Checkout Repo (${{ env.STRIMZI_KAFKA_OPERATOR_NAME }}_${{ env.STRIMZI_KAFKA_OPERATOR_VERSION }})
+        uses: actions/checkout@v4
+        with:
+          repository: ${{ env.STRIMZI_KAFKA_OPERATOR_NAME }}
+          ref: ${{ env.STRIMZI_KAFKA_OPERATOR_VERSION }}
+          path: strimzi-kafka
+
+      - name: Build .apk with Melange
+        
