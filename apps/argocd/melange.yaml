@@ -1,0 +1,113 @@
+package:
+  name: argocd
+  version: 3.0.6
+  description: ArgoCD, K8s GitOps tool.
+  url: https://github.com/argoproj/argo-cd/
+  target-architecture:
+  - arm64
+  - amd64
+  - aarch64
+  - x86_64
+
+environment:
+  contents:
+    repositories:
+    - https://packages.wolfi.dev/os
+    keyring:
+    - https://packages.wolfi.dev/os/wolfi-signing.rsa.pub
+    packages:
+    - go=~1.24.4
+    - busybox
+    - ca-certificates-bundle
+    - git
+    - git-lfs
+    - make
+    - bash
+    - coreutils
+    - findutils
+    - grep
+    - sed
+    - gawk
+    - nodejs
+    - npm
+    - yarn
+    - wget
+    - curl
+    - zip
+    - unzip
+  environment:
+    CGO_ENABLED: "0"
+
+pipeline:
+- name: Fetch ArgoCD source
+  runs: |
+    # Clone ArgoCD repository
+    git clone --depth 1 --branch v3.0.6 https://github.com/argoproj/argo-cd.git /tmp/argo-cd
+    cp -r /tmp/argo-cd/* .
+
+- name: Build ArgoCD UI
+  runs: |
+    cd ui
+    yarn install --network-timeout 200000
+    NODE_ENV='production' NODE_ONLINE_ENV='online' NODE_OPTIONS=--max_old_space_size=8192 yarn build
+    cd ..
+
+- name: Build ArgoCD binaries
+  runs: |
+    # Download Go dependencies
+    go mod download
+    
+    # Set build variables
+    export VERSION="3.0.6"
+    export BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
+    export GIT_COMMIT=$(git rev-parse HEAD 2>/dev/null || echo "unknown")
+    export GIT_TREE_STATE="clean"
+    export PACKAGE="github.com/argoproj/argo-cd/v3/common"
+    export KUBECTL_VERSION=$(go list -m k8s.io/client-go | head -n 1 | rev | cut -d' ' -f1 | rev)
+    
+    # Build LDFLAGS
+    export LDFLAGS="-X ${PACKAGE}.version=${VERSION} -X ${PACKAGE}.buildDate=${BUILD_DATE} -X ${PACKAGE}.gitCommit=${GIT_COMMIT} -X ${PACKAGE}.gitTreeState=${GIT_TREE_STATE} -X ${PACKAGE}.kubectlVersion=${KUBECTL_VERSION} -extldflags '-static'"
+    
+    # Create binary directory
+    mkdir -p "${{targets.destdir}}/usr/local/bin"
+    
+    # Build ArgoCD binaries (following the official Makefile)
+    make argocd-all
+    
+    # Copy binaries to destination
+    cp dist/argocd* "${{targets.destdir}}/usr/local/bin/"
+    
+    # Create symlinks for different components
+    cd "${{targets.destdir}}/usr/local/bin"
+    ln -sf argocd argocd-server
+    ln -sf argocd argocd-application-controller
+    ln -sf argocd argocd-repo-server
+    ln -sf argocd argocd-applicationset-controller
+    ln -sf argocd argocd-cmp-server
+    ln -sf argocd argocd-dex
+    ln -sf argocd argocd-notifications
+    ln -sf argocd argocd-k8s-auth
+    ln -sf argocd argocd-commit-server
+
+- name: Install helper scripts
+  runs: |
+    # Create directories for helper scripts
+    mkdir -p "${{targets.destdir}}/usr/local/bin"
+    
+    # Copy helper scripts (if they exist in the repo)
+    if [ -f hack/gpg-wrapper.sh ]; then
+      cp hack/gpg-wrapper.sh "${{targets.destdir}}/usr/local/bin/"
+      chmod +x "${{targets.destdir}}/usr/local/bin/gpg-wrapper.sh"
+    fi
+    
+    if [ -f hack/git-verify-wrapper.sh ]; then
+      cp hack/git-verify-wrapper.sh "${{targets.destdir}}/usr/local/bin/"
+      chmod +x "${{targets.destdir}}/usr/local/bin/git-verify-wrapper.sh"
+    fi
+    
+    if [ -f entrypoint.sh ]; then
+      cp entrypoint.sh "${{targets.destdir}}/usr/local/bin/"
+      chmod +x "${{targets.destdir}}/usr/local/bin/entrypoint.sh"
+      # Create backward compatibility symlink
+      ln -sf entrypoint.sh "${{targets.destdir}}/usr/local/bin/uid_entrypoint.sh"
+    fi
