@@ -1,0 +1,118 @@
+contents:
+  repositories:
+    - https://packages.wolfi.dev/os
+    - "@local packages/"
+  keyring:
+    - https://packages.wolfi.dev/os/wolfi-signing.rsa.pub
+    - melange.rsa.pub
+  packages:
+    - argocd@local
+    - ca-certificates-bundle
+    - git
+    - git-lfs
+    - openssh-client
+    - bash
+    - curl
+    - tzdata
+    - busybox
+    - tini
+    - gpg
+    - gpg-agent
+
+# Use tini as init system (like the official image)
+entrypoint:
+  command: /usr/bin/tini
+  
+cmd:  "/usr/local/bin/argocd"
+
+# Default working directory
+work-dir: /home/argocd
+
+# User accounts for security (matching official Dockerfile)
+accounts:
+  groups:
+    - groupname: argocd
+      gid: 999
+  users:
+    - username: argocd
+      uid: 999
+      gid: 999
+      shell: /bin/bash
+  run-as: argocd
+
+# Environment variables (matching official Dockerfile)
+environment:
+  PATH: /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+  HOME: /home/argocd
+  USER: argocd
+  ARGOCD_USER_ID: "999"
+  DEBIAN_FRONTEND: noninteractive
+
+# Filesystem setup (matching official Dockerfile structure)
+paths:
+  - path: /home/argocd
+    type: directory
+    uid: 999
+    gid: 999
+    permissions: 0o755
+  - path: /app/config
+    type: directory
+    uid: 999
+    gid: 999
+    permissions: 0o755
+  - path: /app/config/ssh
+    type: directory
+    uid: 999
+    gid: 999
+    permissions: 0o755
+  - path: /app/config/ssh/ssh_known_hosts
+    type: empty-file
+    uid: 999
+    gid: 999
+    permissions: 0o644
+  - path: /etc/ssh/ssh_known_hosts
+    type: symlink
+    source: /app/config/ssh/ssh_known_hosts
+    uid: 999
+    gid: 999
+  - path: /app/config/tls
+    type: directory
+    uid: 999
+    gid: 999
+    permissions: 0o755
+  - path: /app/config/gpg
+    type: directory
+    uid: 999
+    gid: 999
+    permissions: 0o755
+  - path: /app/config/gpg/source
+    type: directory
+    uid: 999
+    gid: 999
+    permissions: 0o755
+  - path: /app/config/gpg/keys
+    type: directory
+    uid: 999
+    gid: 999
+    permissions: 0o700
+  - path: /tmp
+    type: directory
+    uid: 999
+    gid: 999
+    permissions: 0o1777
+
+# Support multiple architectures
+archs:
+  - arm64
+  - amd64
+  - aarch64
+  - x86_64
+
+# Annotations for metadata (matching official image)
+annotations:
+  org.opencontainers.image.title: "ArgoCD"
+  org.opencontainers.image.description: "Declarative GitOps CD for Kubernetes"
+  org.opencontainers.image.version: "3.0.6"
+  org.opencontainers.image.source: "https://github.com/argoproj/argo-cd"
+  org.opencontainers.image.documentation: "https://argo-cd.readthedocs.io/"
+  org.opencontainers.image.vendor: "Argo Project"
