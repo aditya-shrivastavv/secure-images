@@ -33,7 +33,9 @@ jobs:
       - name: Change directory to kafka-based
         shell: bash
         run: |
-          cd docker-images/kafka-based/
+          pwd
+          ls -la
+          cd ./apps/strimzi-kafka
 
       - name: Build .apk package with Melange
         shell: bash
