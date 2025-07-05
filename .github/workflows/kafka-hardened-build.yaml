@@ -30,6 +30,21 @@ jobs:
           curl -sSL https://github.com/chainguard-dev/melange/releases/latest/download/melange-linux-amd64 -o /usr/local/bin/melange
           chmod +x /usr/local/bin/{apko,melange}
 
+          if command -v melange; then
+            echo "melange is installed."
+            melange --version
+          else
+            echo "melange is NOT installed." >&2
+            exit 1
+            
+          if command -v apko; then
+            echo "apko is installed."
+            apko --version
+          else
+            echo "apko is NOT installed." >&2
+            exit 1
+          fi
+
       - name: Change directory to kafka-based
         shell: bash
         run: |
