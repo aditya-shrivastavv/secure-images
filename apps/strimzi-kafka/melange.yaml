@@ -1,21 +1,117 @@
 package:
   name: strimzi-kafka
-  version: 0.46.1
+  version: 0.47.0
+  description: "Kafka image used by the Strimzi Kafka Operator to run Kafka clusters"
+  url: https://github.com/strimzi/strimzi-kafka-operator
+  copyright:
+    - license: Apache-2.0
+  target-architecture:
+    - x86_64
+    - aarch64
 
 environment:
   contents:
-    repositories:
-      - https://packages.wolfi.dev/os
     keyring:
       - https://packages.wolfi.dev/os/wolfi-signing.rsa.pub
+    repositories:
+      - https://packages.wolfi.dev/os
     packages:
-      - make
-      - mvn
+      - wolfi-base
+      - bash
+      - ca-certificates
+      - curl
+      - busybox
+      - openjdk-21-jre
+
+vars:
+  kafka-version: "4.0.0"
+  kafka-exporter-version: "1.9.0"
+  jmx-exporter-version: "1.3.0"
+  strimzi-version: "0.47.0"
 
 pipeline:
-  - name: fetch
-  - name: Build
+  - uses: git-checkout
+    with:
+      repository: https://github.com/strimzi/strimzi-kafka-operator
+      branch: main
+      destination: /tmp/strimzi-source
+
+  # Can be removed, use defaults.
+  - name: Create kafka user
     runs: |
-      set -x
-      make clean
-      make all
+      adduser -D -u 1001 -G root kafka 2>/dev/null || true
+
+  - name: Create directories
+    runs: |
+      mkdir -p /opt/kafka
+      mkdir -p /opt/kafka/plugins
+      mkdir -p /opt/kafka-exporter
+      mkdir -p /opt/prometheus-jmx-exporter
+      mkdir -p /opt/cruise-control
+
+  - name: Download and install Kafka
+    runs: |
+      cd /tmp
+      curl -L "https://archive.apache.org/dist/kafka/${{vars.kafka-version}}/kafka_2.13-${{vars.kafka-version}}.tgz" -o kafka.tgz
+      echo "00722AB0A6B954E0006994B8D589DCD8F26E1827C47F70B6E820FB45AA35945C19163B0F188CAF0CAF976C11F7AB005FD368C54E5851E899D2DE687A804A5EB9  kafka.tgz" | sha512sum -c
+      tar -xzf kafka.tgz -C /opt/kafka --strip-components=1
+      rm kafka.tgz
+
+  # This section can be removed for basic kafka.
+  - name: Download and install Kafka Exporter
+    runs: |
+      cd /tmp
+      case $(uname -m) in
+        x86_64)
+          ARCH="amd64"
+          CHECKSUM="2bf79378221e7662c054d5dafaa48c0a77b8d6036d31d5fde3aaa1d2049e5619f6f9d21c2e2a0944e38a916fc12fbcb8e200ec5daf4f9019d6a35bc85f79eb39"
+          ;;
+        aarch64)
+          ARCH="arm64"
+          CHECKSUM="d57cd7478f632cd05e8d5296377da59dfe934e154c1c6ccda9f109137c740132e17fc358d4cb29523b0f575a72ac6b7e2bd87b6ecb9363bba86035a8b14df9e4"
+          ;;
+        *)
+          echo "Unsupported architecture: $(uname -m)"
+          exit 1
+          ;;
+      esac
+      curl -L "https://github.com/danielqsj/kafka_exporter/releases/download/v${{vars.kafka-exporter-version}}/kafka_exporter-${{vars.kafka-exporter-version}}.linux-${ARCH}.tar.gz" -o kafka_exporter.tar.gz
+      echo "${CHECKSUM}  kafka_exporter.tar.gz" | sha512sum -c
+      tar -xzf kafka_exporter.tar.gz -C /opt/kafka-exporter --strip-components=1
+      rm kafka_exporter.tar.gz
+
+  # This section can be removed for basic kafka.
+  - name: Download and install JMX Exporter
+    runs: |
+      cd /tmp
+      curl -L "https://github.com/prometheus/jmx_exporter/releases/download/${{vars.jmx-exporter-version}}/jmx_prometheus_javaagent-${{vars.jmx-exporter-version}}.jar" -o jmx_prometheus_javaagent.jar
+      echo "58b87e0c7f14cdbd3cdac3408e377be0bf0b30b3cd878669e94bf48181e878e3e4d30b2c2219c74da7f694fe85bcf81014520d84294da44e302247126bd92753  jmx_prometheus_javaagent.jar" | sha512sum -c
+      mv jmx_prometheus_javaagent.jar /opt/prometheus-jmx-exporter/
+
+  - name: Copy scripts and configuration
+    runs: |
+      cp -r /tmp/strimzi-source/docker-images/kafka-based/kafka/scripts/* /opt/kafka/
+      cp -r /tmp/strimzi-source/docker-images/kafka-based/kafka/exporter-scripts/* /opt/kafka-exporter/
+      cp -r /tmp/strimzi-source/docker-images/kafka-based/kafka/cruise-control-scripts/* /opt/cruise-control/
+
+  # Can be modified as per need.
+  - name: Set permissions
+    runs: |
+      chown -R kafka:root /opt/kafka /opt/kafka-exporter /opt/prometheus-jmx-exporter /opt/cruise-control
+      chmod -R g+w /opt/kafka /opt/kafka-exporter /opt/prometheus-jmx-exporter /opt/cruise-control
+      find /opt/kafka/bin -name "*.sh" -exec chmod +x {} \;
+      find /opt/kafka -name "*.sh" -exec chmod +x {} \;
+      find /opt/kafka-exporter -name "*.sh" -exec chmod +x {} \;
+      find /opt/cruise-control -name "*.sh" -exec chmod +x {} \;
+
+  - name: Set environment variables
+    runs: |
+      echo "export KAFKA_HOME=/opt/kafka" >> /etc/environment
+      echo "export KAFKA_VERSION=${{vars.kafka-version}}" >> /etc/environment
+      echo "export STRIMZI_VERSION=${{vars.strimzi-version}}" >> /etc/environment
+      echo "export KAFKA_EXPORTER_HOME=/opt/kafka-exporter" >> /etc/environment
+      echo "export KAFKA_EXPORTER_VERSION=${{vars.kafka-exporter-version}}" >> /etc/environment
+      echo "export JMX_EXPORTER_HOME=/opt/prometheus-jmx-exporter" >> /etc/environment
+      echo "export JMX_EXPORTER_VERSION=${{vars.jmx-exporter-version}}" >> /etc/environment
+      echo "export CRUISE_CONTROL_HOME=/opt/cruise-control" >> /etc/environment
+      echo "export PATH=$PATH:/opt/kafka/bin" >> /etc/environment
