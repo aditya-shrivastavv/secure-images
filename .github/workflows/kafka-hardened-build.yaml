@@ -36,7 +36,8 @@ jobs:
           else
             echo "melange is NOT installed." >&2
             exit 1
-            
+          fi
+          
           if command -v apko; then
             echo "apko is installed."
             apko --version
