@@ -32,4 +32,7 @@ jobs:
           path: strimzi-kafka
 
       - name: Build .apk with Melange
-        
+        shell: bash
+        run: |
+          make clean
+          make all
