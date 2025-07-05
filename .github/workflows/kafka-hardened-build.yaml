@@ -34,5 +34,6 @@ jobs:
       - name: Build .apk with Melange
         shell: bash
         run: |
+          cd strimzi-kafka/
           make clean
           make all
