@@ -32,14 +32,12 @@ jobs:
 
           curl -sSL https://github.com/chainguard-dev/melange/releases/download/v0.29.0/melange_0.29.0_linux_amd64.tar.gz -o melange.tar.gz
           tar -xzf melange.tar.gz
-          ls -la
-          sudo mv melange /usr/local/bin/melange
+          sudo mv melange_0.29.0_linux_amd64/melange /usr/local/bin/melange
           sudo chmod +x /usr/local/bin/melange
 
           curl -sSL https://github.com/chainguard-dev/apko/releases/download/v0.29.0/apko_0.29.0_linux_amd64.tar.gz -o apko.tar.gz
           tar -xzf apko.tar.gz
-          ls -la
-          sudo mv apko /usr/local/bin/apko
+          sudo mv apko_0.29.0_linux_amd64/apko /usr/local/bin/apko
           sudo chmod +x /usr/local/bin/apko
 
           if command -v melange; then
