@@ -52,25 +52,18 @@ jobs:
             exit 1
           fi
 
-      - name: Change directory to kafka-based
-        shell: bash
-        run: |
-          echo "Present working directory:"
-          pwd
-          ls -la
-          cd ./apps/strimzi-kafka
-          ls -la
-
       - name: Build .apk package with Melange
         shell: bash
         run: |
-          pwd
+          cd ./apps/strimzi-kafka
           ls -la
           melange build melange.yaml
 
       - name: Create OCI image with apko
         shell: bash
         run: |
+          cd ./apps/strimzi-kafka
+          ls -la
           apko build apko.yaml strimzi-kafka:latest strimzi-kafka.tar
 
       - name: Load image into Docker
