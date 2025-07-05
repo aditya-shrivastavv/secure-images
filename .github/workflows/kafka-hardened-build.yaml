@@ -26,10 +26,6 @@ jobs:
       - name: Setup Melange & Apko
         shell: bash
         run: |
-          # curl -sSL https://github.com/chainguard-dev/melange/releases/download/v0.29.0/melange_0.29.0_linux_amd64.tar.gz -o /usr/local/bin/melange
-          # curl -sSL https://github.com/chainguard-dev/apko/releases/download/v0.29.0/apko_0.29.0_linux_amd64.tar.gz -o /usr/local/bin/apko
-          # chmod +x /usr/local/bin/{apko,melange}
-
           curl -sSL https://github.com/chainguard-dev/melange/releases/download/v0.29.0/melange_0.29.0_linux_amd64.tar.gz -o melange.tar.gz
           tar -xzf melange.tar.gz
           sudo mv melange_0.29.0_linux_amd64/melange /usr/local/bin/melange
@@ -42,7 +38,7 @@ jobs:
 
           if command -v melange; then
             echo "melange is installed."
-            melange --version
+            melange version
           else
             echo "melange is NOT installed." >&2
             exit 1
@@ -50,7 +46,7 @@ jobs:
           
           if command -v apko; then
             echo "apko is installed."
-            apko --version
+            apko version
           else
             echo "apko is NOT installed." >&2
             exit 1
