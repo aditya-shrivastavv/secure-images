@@ -55,13 +55,17 @@ jobs:
       - name: Change directory to kafka-based
         shell: bash
         run: |
+          echo "Present working directory:"
           pwd
           ls -la
           cd ./apps/strimzi-kafka
+          ls -la
 
       - name: Build .apk package with Melange
         shell: bash
         run: |
+          pwd
+          ls -la
           melange build melange.yaml
 
       - name: Create OCI image with apko
