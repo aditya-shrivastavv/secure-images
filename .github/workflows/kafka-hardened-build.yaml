@@ -57,7 +57,7 @@ jobs:
         run: |
           cd ./apps/strimzi-kafka
           ls -la
-          melange build melange.yaml
+          melange build melange.yaml --runner docker
 
       - name: Create OCI image with apko
         shell: bash
