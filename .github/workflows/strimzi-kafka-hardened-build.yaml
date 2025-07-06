@@ -57,6 +57,12 @@ jobs:
         working-directory: ./apps/strimzi-kafka
         run: |
           docker load < strimzi-kafka.tar
+          docker images
+
+      - name: Check kafka version
+        continue-on-error: true
+        run: |
+          docker run --rm --entrypoint /opt/kafka/bin/kafka-topics.sh strimzi-kafka:latest-amd64 --version
 
       - name: Scan image - Grype
         run: |
@@ -75,20 +81,23 @@ jobs:
         with:
           cosign-release: 'v2.5.2'
 
-      - name: Sign images with cosign
-        shell: bash
-        run: |
-          echo "${{ secrets.COSIGN_PRIVATE_KEY }}" > cosign.key
-          cat cosign.key
-          cosign sign --yes --key cosign.key strimzi-kafka:latest-amd64
-          cosign sign --yes --key cosign.key strimzi-kafka:latest-arm64
-
-      - name: Tag and push image to registry
-        shell: bash
+      - name: Tag images
         run: |
           docker image tag strimzi-kafka:latest-amd64 ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka_amd64:latest
           docker image tag strimzi-kafka:latest-arm64 ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka_arm64:latest
-          
+
+      - name: Sign images with cosign
+        shell: bash
+        env:
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          echo "${{ secrets.COSIGN_PRIVATE_KEY }}" > cosign.key
+          cosign sign --yes --key cosign.key ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka_amd64:latest
+          cosign sign --yes --key cosign.key ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka_arm64:latest
+
+      - name: Push images to registry
+        shell: bash
+        run: |
           echo "-------- Pushing strimzi-kafka:latest-amd64 --------"
           docker push ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka_amd64:latest
 
