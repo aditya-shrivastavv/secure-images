@@ -75,8 +75,9 @@ jobs:
         shell: bash
         run: |
           echo "${{ secrets.COSIGN_PRIVATE_KEY }}" > cosign.key
-          cosign sign --key cosign.key strimzi-kafka:latest-amd64:latest
-          cosign sign --key cosign.key strimzi-kafka:latest-arm64:latest
+          cat cosign.key
+          cosign sign --yes --key cosign.key strimzi-kafka:latest-amd64:latest
+          cosign sign --yes --key cosign.key strimzi-kafka:latest-arm64:latest
 
       - name: Tag and push image to registry
         shell: bash
