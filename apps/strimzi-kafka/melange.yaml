@@ -18,6 +18,7 @@ environment:
     packages:
       - wolfi-base
       - bash
+      - git
       - ca-certificates
       - curl
       - busybox
