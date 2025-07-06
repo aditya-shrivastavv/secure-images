@@ -16,8 +16,8 @@ jobs:
         with:
           clean: false  
 
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3.11.1
+      # - name: Setup Docker Buildx
+      #   uses: docker/setup-buildx-action@v3.11.1
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
@@ -60,6 +60,23 @@ jobs:
         working-directory: ./apps/strimzi-kafka
         run: |
           docker load < strimzi-kafka.tar
+
+      - name: Scan image
+        uses: anchore/scan-action@v6
+        with:
+          image: "strimzi-kafka:latest-amd64:latest"
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.9.1
+        with:
+          cosign-release: 'v2.5.2'
+
+      - name: Sign images with cosign
+        shell: bash
+        run: |
+          echo "${{ secrets.COSIGN_PRIVATE_KEY }}" > cosign.key
+          cosign sign --key cosign.key strimzi-kafka:latest-amd64:latest
+          cosign sign --key cosign.key strimzi-kafka:latest-arm64:latest
 
       - name: Tag and push image to registry
         shell: bash
