@@ -59,12 +59,20 @@ jobs:
       - name: Create test-dirfs-1 directory
         run: mkdir -p test-dirfs-1
 
+      # - name: Build .apk package with Melange
+      #   shell: bash
+      #   run: |
+      #     cd ./apps/strimzi-kafka
+      #     ls -la
+      #     sudo melange build melange.yaml --runner docker
+
       - name: Build .apk package with Melange
         shell: bash
         run: |
           cd ./apps/strimzi-kafka
-          ls -la
-          sudo melange build melange.yaml --runner docker
+          for i in {1..3}; do
+            sudo melange build melange.yaml --runner docker && break || sleep 10
+          done
 
       - name: Create OCI image with apko
         shell: bash
