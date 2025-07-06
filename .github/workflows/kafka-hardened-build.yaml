@@ -59,21 +59,15 @@ jobs:
 
       - name: Build .apk package with Melange
         shell: bash
+        working-directory: ./apps/strimzi-kafka
         run: |
-          cd ./apps/strimzi-kafka
-          ls -la
-          tree -h
           sudo melange build melange.yaml --runner docker
-          tree -h
 
       - name: Create OCI image with apko
         shell: bash
+        working-directory: ./apps/strimzi-kafka
         run: |
-          cd ./apps/strimzi-kafka
-          ls -la
-          tree -h
           sudo apko build apko.yaml strimzi-kafka:latest strimzi-kafka.tar
-          tree -h
 
       - name: Load image into Docker
         shell: bash
@@ -81,11 +75,15 @@ jobs:
         run: |
           docker load < strimzi-kafka.tar
 
-      - name: Push image to registry
-        uses: docker/build-push-action@v6.18.0
-        with:
-          push: true
-          tags: |
-            ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka:latest-arm64
-            ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka:latest-amd64
+      - name: Tag and push image to registry
+        shell: bash
+        run: |
+          docker image tag strimzi-kafka:latest-amd64 ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka_amd64:latest
+          docker image tag strimzi-kafka:latest-arm64 ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka_arm64:latest
+          
+          echo "-------- Pushing strimzi-kafka:latest-amd64 --------"
+          docker push ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka_amd64:latest
+
+          echo "-------- Pushing strimzi-kafka:latest-arm64 --------"
+          docker push ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka_arm64:latest
           
