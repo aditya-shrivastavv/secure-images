@@ -52,19 +52,23 @@ jobs:
             exit 1
           fi
 
+      - name: Check Docker status
+        run: |
+          docker info
+
       - name: Build .apk package with Melange
         shell: bash
         run: |
           cd ./apps/strimzi-kafka
           ls -la
-          melange build melange.yaml --runner docker
+          sudo melange build melange.yaml --runner docker
 
       - name: Create OCI image with apko
         shell: bash
         run: |
           cd ./apps/strimzi-kafka
           ls -la
-          apko build apko.yaml strimzi-kafka:latest strimzi-kafka.tar
+          sudo apko build apko.yaml strimzi-kafka:latest strimzi-kafka.tar
 
       - name: Load image into Docker
         shell: bash
