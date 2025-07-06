@@ -58,14 +58,18 @@ jobs:
         run: |
           docker load < strimzi-kafka.tar
 
-      - name: Scan image
-        uses: anchore/scan-action@v6
-        with:
-          image: "strimzi-kafka:latest-amd64:latest"
-          severity-cutoff: high
-          fail-build: false
-          output-format: table
+      - name: Scan image - Grype
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock anchore/grype:v0.94.0 \
+          strimzi-kafka:latest-amd64 | tee strimzi-kafka_latest-amd64_pre_grype.txt
 
+      - name: Upload grype report as artifact
+        id: artifact-upload-grype
+        uses: actions/upload-artifact@v4
+        with:
+          name: Grype-report-strimzi-kafka
+          path: strimzi-kafka_latest-amd64_pre_grype.txt
+        
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3.9.1
         with:
@@ -76,8 +80,8 @@ jobs:
         run: |
           echo "${{ secrets.COSIGN_PRIVATE_KEY }}" > cosign.key
           cat cosign.key
-          cosign sign --yes --key cosign.key strimzi-kafka:latest-amd64:latest
-          cosign sign --yes --key cosign.key strimzi-kafka:latest-arm64:latest
+          cosign sign --yes --key cosign.key strimzi-kafka:latest-amd64
+          cosign sign --yes --key cosign.key strimzi-kafka:latest-arm64
 
       - name: Tag and push image to registry
         shell: bash
