@@ -64,7 +64,7 @@ jobs:
         run: |
           cd ./apps/strimzi-kafka
           ls -la
-          sudo melange build melange.yaml --runner docker --cleanup false
+          sudo melange build melange.yaml --runner docker --cleanup false --debug --debug-runner
 
       # - name: Build .apk package with Melange
       #   shell: bash
