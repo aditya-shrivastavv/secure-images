@@ -57,25 +57,27 @@ jobs:
             exit 1
           fi
 
-      - name: Docker cleanup
-        run: |
-          docker container prune -f
-          docker image prune -f
-          docker builder prune -f
+      # - name: Docker cleanup
+      #   run: |
+      #     docker container prune -f
+      #     docker image prune -f
+      #     docker builder prune -f
 
-      - name: Check Docker status
-        run: |
-          docker info
+      # - name: Check Docker status
+      #   run: |
+      #     docker info
 
-      - name: Create test-dirfs-1 directory
-        run: mkdir -p test-dirfs-1
+      # - name: Create test-dirfs-1 directory
+      #   run: mkdir -p test-dirfs-1
 
       - name: Build .apk package with Melange
         shell: bash
         run: |
           cd ./apps/strimzi-kafka
           ls -la
-          sudo melange build melange.yaml --runner docker --debug
+          tree -h
+          sudo melange build melange.yaml --runner docker
+          tree -h
 
       # - name: Build .apk package with Melange
       #   shell: bash
@@ -90,7 +92,9 @@ jobs:
         run: |
           cd ./apps/strimzi-kafka
           ls -la
+          tree -h
           sudo apko build apko.yaml strimzi-kafka:latest strimzi-kafka.tar
+          tree -h
 
       - name: Load image into Docker
         shell: bash
