@@ -9,7 +9,6 @@ contents:
     - bash
     - ca-certificates
     - curl
-    - busybox
     - openjdk-21-jre
     - strimzi-kafka@local
 
