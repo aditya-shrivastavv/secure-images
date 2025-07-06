@@ -56,6 +56,9 @@ jobs:
         run: |
           docker info
 
+      - name: Create test-dirfs-1 directory
+        run: mkdir -p test-dirfs-1
+
       - name: Build .apk package with Melange
         shell: bash
         run: |
