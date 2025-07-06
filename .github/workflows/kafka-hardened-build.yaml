@@ -19,6 +19,9 @@ jobs:
       - name: Setup Docker Buildx
         uses: docker/setup-buildx-action@v3.11.1
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Docker Login
         uses: docker/login-action@3.4.0
         with:
@@ -72,7 +75,7 @@ jobs:
         run: |
           cd ./apps/strimzi-kafka
           ls -la
-          sudo melange build melange.yaml --runner host --debug
+          sudo melange build melange.yaml --runner docker --debug
 
       # - name: Build .apk package with Melange
       #   shell: bash
