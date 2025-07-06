@@ -31,31 +31,17 @@ jobs:
       - name: Setup Melange & Apko
         shell: bash
         run: |
+          echo "---------- Setup: melange ----------"
           curl -sSL https://github.com/chainguard-dev/melange/releases/download/v0.28.0/melange_0.28.0_linux_amd64.tar.gz -o melange.tar.gz
           tar -xzf melange.tar.gz
           sudo mv melange_0.28.0_linux_amd64/melange /usr/local/bin/melange
           sudo chmod +x /usr/local/bin/melange
 
+          echo "---------- Setup: apko ----------"
           curl -sSL https://github.com/chainguard-dev/apko/releases/download/v0.29.0/apko_0.29.0_linux_amd64.tar.gz -o apko.tar.gz
           tar -xzf apko.tar.gz
           sudo mv apko_0.29.0_linux_amd64/apko /usr/local/bin/apko
           sudo chmod +x /usr/local/bin/apko
-
-          if command -v melange; then
-            echo "melange is installed."
-            melange version
-          else
-            echo "melange is NOT installed." >&2
-            exit 1
-          fi
-          
-          if command -v apko; then
-            echo "apko is installed."
-            apko version
-          else
-            echo "apko is NOT installed." >&2
-            exit 1
-          fi
 
       - name: Build .apk package with Melange
         shell: bash
