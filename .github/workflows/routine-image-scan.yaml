@@ -1,7 +1,0 @@
-name: Routine Scan
-on:
-  workflow_dispatch:
-  schedule:
-  - cron: ""
-# - name: Anchore Container Scan
-#   uses: anchore/scan-action@v6.4.0
