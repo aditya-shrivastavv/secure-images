@@ -21,7 +21,6 @@ environment:
       - git
       - ca-certificates
       - curl
-      - busybox
       - openjdk-21-jre
 
 vars:
