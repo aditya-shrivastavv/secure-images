@@ -1,0 +1,106 @@
+name: Strimzi-kafka hardening build
+on:
+  workflow_dispatch:
+jobs:
+  build-scan:
+    runs-on: ubuntu-latest
+    env:
+      PACKAGE: kafka-operator
+      VERSION: 4.0.0
+      STRIMZI_KAFKA_OPERATOR_NAME: strimzi/strimzi-kafka-operator
+      STRIMZI_KAFKA_OPERATOR_VERSION: 0.47.0
+
+    steps:
+      - name: Checkout Repo (secure-images)
+        uses: actions/checkout@v4
+        with:
+          clean: false  
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Docker Login
+        uses: docker/login-action@3.4.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Setup Melange & Apko
+        shell: bash
+        run: |
+          echo "---------- Setup: melange ----------"
+          curl -sSL https://github.com/chainguard-dev/melange/releases/download/v0.28.0/melange_0.28.0_linux_amd64.tar.gz -o melange.tar.gz
+          tar -xzf melange.tar.gz
+          sudo mv melange_0.28.0_linux_amd64/melange /usr/local/bin/melange
+          sudo chmod +x /usr/local/bin/melange
+
+          echo "---------- Setup: apko ----------"
+          curl -sSL https://github.com/chainguard-dev/apko/releases/download/v0.29.0/apko_0.29.0_linux_amd64.tar.gz -o apko.tar.gz
+          tar -xzf apko.tar.gz
+          sudo mv apko_0.29.0_linux_amd64/apko /usr/local/bin/apko
+          sudo chmod +x /usr/local/bin/apko
+
+      - name: Build .apk package with Melange
+        shell: bash
+        working-directory: ./apps/strimzi-kafka-operator
+        run: |
+          sudo melange build melange.yaml --runner docker
+
+      - name: Create OCI image with apko
+        shell: bash
+        working-directory: ./apps/strimzi-kafka-operator
+        run: |
+          sudo apko build apko.yaml strimzi-kafka-operator:latest strimzi-kafka-operator.tar
+
+      - name: Load image into Docker
+        shell: bash
+        working-directory: ./apps/strimzi-kafka-operator
+        run: |
+          docker load < strimzi-kafka-operator.tar
+          docker images
+
+      - name: Check strimzi-kafka-operator version
+        continue-on-error: true
+        run: |
+          docker run --rm --entrypoint="" strimzi-kafka-operator:latest-amd64 env | grep STRIMZI
+
+      - name: Scan image - Grype
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock anchore/grype:v0.94.0 \
+          strimzi-kafka-operator:latest-amd64 | tee strimzi-kafka-operator_latest-amd64_grype.txt
+
+      - name: Upload grype report as artifact
+        id: artifact-upload-grype
+        uses: actions/upload-artifact@v4
+        with:
+          name: Grype-report-strimzi-kafka
+          path: strimzi-kafka-operator_latest-amd64_grype.txt
+        
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v3.9.1
+        with:
+          cosign-release: 'v2.5.2'
+
+      - name: Tag images
+        run: |
+          docker image tag strimzi-kafka-operator:latest-amd64 ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka-operator_amd64:latest
+          docker image tag strimzi-kafka-operator:latest-arm64 ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka-operator_arm64:latest
+
+      - name: Sign images with cosign
+        shell: bash
+        env:
+          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+        run: |
+          echo "${{ secrets.COSIGN_PRIVATE_KEY }}" > cosign.key
+          cosign sign --yes --key cosign.key ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka-operator_amd64:latest
+          cosign sign --yes --key cosign.key ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka-operator_arm64:latest
+
+      - name: Push images to registry
+        shell: bash
+        run: |
+          echo "-------- Pushing strimzi-kafka:latest-amd64 --------"
+          docker push ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka-operator_amd64:latest
+
+          echo "-------- Pushing strimzi-kafka:latest-arm64 --------"
+          docker push ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka-operator_arm64:latest
+          
