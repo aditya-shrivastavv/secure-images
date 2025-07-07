@@ -13,10 +13,11 @@ contents:
     - tini
     - strimzi-kafka-operator@local
 
-entrypoint:
-  command: /opt/strimzi/bin/launch_java.sh
+# entrypoint:
+#   command: /opt/strimzi/bin/launch_java.sh
 
-cmd: /opt/strimzi/bin/launch_java.sh
+# cmd: /opt/strimzi/bin/launch_java.sh
+cmd: /bin/bash
 
 environment:
   STRIMZI_VERSION: "0.47.0"
