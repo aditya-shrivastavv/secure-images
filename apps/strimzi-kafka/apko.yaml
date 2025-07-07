@@ -12,10 +12,6 @@ contents:
     - openjdk-21-jre
     - strimzi-kafka@local
 
-# entrypoint:
-#   command: /opt/kafka/kafka_run.sh
-
-# cmd: /opt/kafka/kafka_run.sh
 cmd: /bin/bash
 
 environment:
