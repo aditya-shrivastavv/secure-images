@@ -8,7 +8,7 @@ jobs:
       PACKAGE: kafka
       VERSION: 4.0.0
       STRIMZI_KAFKA_OPERATOR_NAME: strimzi/strimzi-kafka-operator
-      STRIMZI_KAFKA_OPERATOR_VERSION: 0.46.0
+      STRIMZI_KAFKA_OPERATOR_VERSION: 0.47.0
 
     steps:
       - name: Checkout Repo (secure-images)
