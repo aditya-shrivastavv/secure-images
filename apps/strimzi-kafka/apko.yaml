@@ -17,7 +17,7 @@ cmd: /bin/bash
 environment:
   KAFKA_HOME: /opt/kafka
   KAFKA_VERSION: "4.0.0"
-  STRIMZI_VERSION: "0.46.1"
+  STRIMZI_VERSION: "0.46.0"
   KAFKA_EXPORTER_HOME: /opt/kafka-exporter
   KAFKA_EXPORTER_VERSION: "1.9.0"
   JMX_EXPORTER_HOME: /opt/prometheus-jmx-exporter
@@ -44,7 +44,7 @@ annotations:
   org.opencontainers.image.source: https://github.com/strimzi/strimzi-kafka-operator
   org.opencontainers.image.title: "Strimzi Kafka"
   org.opencontainers.image.description: "Kafka image used by the Strimzi Kafka Operator to run Kafka clusters"
-  org.opencontainers.image.version: "0.46.1"
+  org.opencontainers.image.version: "0.46.0"
   org.opencontainers.image.vendor: "Strimzi"
   org.opencontainers.image.licenses: "Apache-2.0"
   org.opencontainers.image.url: "https://strimzi.io"
