@@ -86,14 +86,14 @@ jobs:
           docker image tag strimzi-kafka-operator:latest-amd64 ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka-operator_amd64:latest
           # docker image tag strimzi-kafka-operator:latest-arm64 ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka-operator_arm64:latest
 
-      - name: Sign images with cosign
-        shell: bash
-        env:
-          COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
-        run: |
-          echo "${{ secrets.COSIGN_PRIVATE_KEY }}" > cosign.key
-          cosign sign --yes --key cosign.key ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka-operator_amd64:latest
-          # cosign sign --yes --key cosign.key ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka-operator_arm64:latest
+      # - name: Sign images with cosign
+      #   shell: bash
+      #   env:
+      #     COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
+      #   run: |
+      #     echo "${{ secrets.COSIGN_PRIVATE_KEY }}" > cosign.key
+      #     cosign sign --yes --key cosign.key ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka-operator_amd64:latest
+      #     # cosign sign --yes --key cosign.key ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka-operator_arm64:latest
 
       - name: Push images to registry
         shell: bash
