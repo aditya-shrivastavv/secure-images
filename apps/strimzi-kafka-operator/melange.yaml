@@ -1,9 +1,9 @@
 vars:
-  strimzi-version: "0.46.1"
+  strimzi-version: "0.46.0"
 
 package:
   name: strimzi-kafka-operator
-  version: 0.46.1
+  version: 0.46.0
   description: "Operator image used by the cluster and entity operator components of the Strimzi Kafka Operator"
   url: https://github.com/strimzi/strimzi-kafka-operator
   copyright:
