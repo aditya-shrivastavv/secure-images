@@ -1,0 +1,186 @@
+package:
+  name: strimzi-kafka-operator
+  version: 0.47.0
+  description: "Operator image used by the cluster and entity operator components of the Strimzi Kafka Operator"
+  url: https://github.com/strimzi/strimzi-kafka-operator
+  copyright:
+    - license: Apache-2.0
+  target-architecture:
+    - x86_64
+    - aarch64
+
+environment:
+  contents:
+    keyring:
+      - https://packages.wolfi.dev/os/wolfi-signing.rsa.pub
+    repositories:
+      - https://packages.wolfi.dev/os
+    packages:
+      - wolfi-base
+      - bash
+      - git
+      - ca-certificates
+      - curl
+      - openssl
+      - shadow
+      - openjdk-17
+      - openjdk-17-default-jvm
+      - maven
+      - tini
+      - unzip
+  environment:
+    JAVA_HOME: /usr/lib/jvm/java-17-openjdk
+    PATH: /usr/lib/jvm/java-17-openjdk/bin:$PATH
+    STRIMZI_HOME: /opt/strimzi
+
+vars:
+  strimzi-version: "0.47.0"
+
+pipeline:
+  - uses: git-checkout
+    with:
+      repository: https://github.com/strimzi/strimzi-kafka-operator
+      branch: main
+      destination: /tmp/strimzi-source
+
+  # Create strimzi user (matching the original Dockerfile)
+  - name: Create strimzi user
+    runs: |
+      # Create strimzi user with UID 1001 in group 0 (like the original)
+      useradd -r -m -u 1001 -g 0 strimzi 2>/dev/null || true
+      echo "Created strimzi user with UID 1001"
+
+  # Setup Tini (matches base image Tini setup)
+  - name: Setup Tini
+    runs: |
+      # Ensure Tini is available at /usr/bin/tini as expected by launch_java.sh
+      if [ ! -f /usr/bin/tini ]; then
+        # Find where Tini was installed and symlink it if needed
+        TINI_PATH=$(which tini 2>/dev/null || find /usr -name tini -type f 2>/dev/null | head -1)
+        if [ -n "$TINI_PATH" ] && [ "$TINI_PATH" != "/usr/bin/tini" ]; then
+          ln -sf "$TINI_PATH" /usr/bin/tini
+        fi
+      fi
+      
+      # Verify Tini is working
+      /usr/bin/tini --version || echo "Warning: Tini not properly configured"
+
+  # Create directories
+  - name: Create directories
+    runs: |
+      mkdir -p ${{targets.destdir}}/opt/strimzi
+      mkdir -p ${{targets.destdir}}/opt/strimzi/bin
+      mkdir -p ${{targets.destdir}}/opt/strimzi/lib
+
+  # Build the project with Maven
+  - name: Build Strimzi operators
+    runs: |
+      cd /tmp/strimzi-source
+      export JAVA_HOME=/usr/lib/jvm/java-17-openjdk
+      mvn clean package -DskipTests -Dcheckstyle.skip=true -Dspotbugs.skip=true \
+          -Dmaven.javadoc.skip=true -Dsurefire.skip=true -Dfailsafe.skip=true \
+          -pl cluster-operator,topic-operator,user-operator,kafka-init \
+          -am --batch-mode
+
+  # Extract and organize operator distributions (following original Makefile approach)
+  - name: Extract operator distributions
+    runs: |
+      cd /tmp/strimzi-source/docker-images/operator
+      
+      # Create tmp directory like the original Makefile
+      mkdir -p tmp
+      
+      # Extract each distribution zip into tmp (like the Makefile does)
+      if [ -f ../artifacts/binaries/cluster-operator-${{vars.strimzi-version}}-SNAPSHOT-dist.zip ]; then
+        echo "Extracting cluster-operator distribution..."
+        unzip -qo ../artifacts/binaries/cluster-operator-${{vars.strimzi-version}}-SNAPSHOT-dist.zip -d tmp
+      fi
+      
+      if [ -f ../artifacts/binaries/topic-operator-${{vars.strimzi-version}}-SNAPSHOT-dist.zip ]; then
+        echo "Extracting topic-operator distribution..."
+        unzip -qo ../artifacts/binaries/topic-operator-${{vars.strimzi-version}}-SNAPSHOT-dist.zip -d tmp
+      fi
+      
+      if [ -f ../artifacts/binaries/user-operator-${{vars.strimzi-version}}-SNAPSHOT-dist.zip ]; then
+        echo "Extracting user-operator distribution..."
+        unzip -qo ../artifacts/binaries/user-operator-${{vars.strimzi-version}}-SNAPSHOT-dist.zip -d tmp
+      fi
+      
+      if [ -f ../artifacts/binaries/kafka-init-${{vars.strimzi-version}}-SNAPSHOT-dist.zip ]; then
+        echo "Extracting kafka-init distribution..."
+        unzip -qo ../artifacts/binaries/kafka-init-${{vars.strimzi-version}}-SNAPSHOT-dist.zip -d tmp
+      fi
+      
+      # Copy from tmp/bin/ and tmp/lib/ like the Dockerfile does
+      echo "Copying binaries and libraries..."
+      if [ -d tmp/bin ]; then
+        cp -r tmp/bin/* ${{targets.destdir}}/opt/strimzi/bin/ 2>/dev/null || true
+        echo "Copied binaries from tmp/bin/"
+      fi
+      
+      if [ -d tmp/lib ]; then
+        cp -r tmp/lib/* ${{targets.destdir}}/opt/strimzi/lib/ 2>/dev/null || true
+        echo "Copied libraries from tmp/lib/"
+      fi
+      
+      # List what we have so far
+      echo "Contents of ${{targets.destdir}}/opt/strimzi/bin:"
+      ls -la ${{targets.destdir}}/opt/strimzi/bin/ || true
+      echo "Contents of ${{targets.destdir}}/opt/strimzi/lib:"
+      ls -la ${{targets.destdir}}/opt/strimzi/lib/ | head -10 || true
+
+  # Copy operator scripts (following Dockerfile approach)
+  - name: Copy operator scripts
+    runs: |
+      cd /tmp/strimzi-source/docker-images/operator
+      
+      # Copy scripts from docker-images/operator/scripts/ like the Dockerfile does
+      echo "Copying scripts from scripts/ directory..."
+      if [ -d scripts ]; then
+        cp scripts/* ${{targets.destdir}}/opt/strimzi/bin/ 2>/dev/null || true
+        echo "Copied scripts from scripts/ directory"
+      fi
+      
+      # Copy scripts from tmp/bin/ like the Dockerfile does
+      echo "Copying scripts from tmp/bin/ directory..."
+      if [ -d tmp/bin ]; then
+        cp tmp/bin/* ${{targets.destdir}}/opt/strimzi/bin/ 2>/dev/null || true
+        echo "Copied scripts from tmp/bin/ directory"
+      fi
+      
+      # Ensure launch_java.sh is executable
+      if [ -f ${{targets.destdir}}/opt/strimzi/bin/launch_java.sh ]; then
+        chmod +x ${{targets.destdir}}/opt/strimzi/bin/launch_java.sh
+        echo "Made launch_java.sh executable"
+      else
+        echo "WARNING: launch_java.sh not found!"
+      fi
+      
+      # List what scripts we have
+      echo "Final contents of ${{targets.destdir}}/opt/strimzi/bin:"
+      ls -la ${{targets.destdir}}/opt/strimzi/bin/ || true
+
+  # Set permissions (matching the original approach)
+  - name: Set permissions
+    runs: |
+      # Set ownership and permissions like the original
+      chown -R 1001:0 ${{targets.destdir}}/opt/strimzi
+      chmod -R g+w ${{targets.destdir}}/opt/strimzi
+      find ${{targets.destdir}}/opt/strimzi/bin -name "*.sh" -exec chmod +x {} \; 2>/dev/null || true
+      
+      echo "Set permissions for strimzi user"
+      echo "Final ownership check:"
+      ls -la ${{targets.destdir}}/opt/strimzi/ || true
+
+  # Set environment variables (matching the original)
+  - name: Set environment variables
+    runs: |
+      # Create environment setup files in destdir
+      mkdir -p ${{targets.destdir}}/usr/local/bin
+      echo '#!/bin/bash' > ${{targets.destdir}}/usr/local/bin/strimzi-env.sh
+      echo "export STRIMZI_VERSION=${{vars.strimzi-version}}" >> ${{targets.destdir}}/usr/local/bin/strimzi-env.sh
+      echo 'export STRIMZI_HOME=/opt/strimzi' >> ${{targets.destdir}}/usr/local/bin/strimzi-env.sh
+      echo 'export PATH=$PATH:/opt/strimzi/bin' >> ${{targets.destdir}}/usr/local/bin/strimzi-env.sh
+      chmod +x ${{targets.destdir}}/usr/local/bin/strimzi-env.sh
+      
+      echo "Set environment variables"
