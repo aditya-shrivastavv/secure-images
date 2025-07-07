@@ -1,3 +1,6 @@
+vars:
+  strimzi_version: "0.46.1"
+
 contents:
   keyring:
     - https://packages.wolfi.dev/os/wolfi-signing.rsa.pub
@@ -13,14 +16,10 @@ contents:
     - tini
     - strimzi-kafka-operator@local
 
-# entrypoint:
-#   command: /opt/strimzi/bin/launch_java.sh
-
-# cmd: /opt/strimzi/bin/launch_java.sh
 cmd: /bin/bash
 
 environment:
-  STRIMZI_VERSION: "0.47.0"
+  STRIMZI_VERSION: "${{ vars.strimzi_version }}"
   STRIMZI_HOME: /opt/strimzi
   JAVA_HOME: /usr/lib/jvm/java-17-openjdk
   JAVA_CLASSPATH: "/opt/strimzi/lib/*"
@@ -45,7 +44,7 @@ annotations:
   org.opencontainers.image.source: https://github.com/strimzi/strimzi-kafka-operator
   org.opencontainers.image.title: "Strimzi Kafka Operator"
   org.opencontainers.image.description: "Operator image used by the cluster and entity operator components of the Strimzi Kafka Operator"
-  org.opencontainers.image.version: "0.47.0"
+  org.opencontainers.image.version: "${{ vars.strimzi_version }}"
   org.opencontainers.image.vendor: "Strimzi"
   org.opencontainers.image.licenses: "Apache-2.0"
   org.opencontainers.image.url: "https://strimzi.io"
