@@ -5,7 +5,7 @@ contents:
     - https://packages.wolfi.dev/os
     - "@local /tmp/packages"
   packages:
-    - wolfi-base
+    - wolfi-baselayout
     - bash
     - ca-certificates
     - curl
