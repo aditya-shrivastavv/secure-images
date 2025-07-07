@@ -1,0 +1,69 @@
+contents:
+  keyring:
+    - https://packages.wolfi.dev/os/wolfi-signing.rsa.pub
+    - local-signing.rsa.pub
+  repositories:
+    - https://packages.wolfi.dev/os
+    - "@local packages"
+  packages:
+    - wolfi-base
+    - bash
+    - ca-certificates
+    - curl
+    - openjdk-17-jre
+    - tini
+    - strimzi-kafka-operator@local
+
+entrypoint:
+  command: /opt/strimzi/bin/launch_java.sh
+
+cmd: /opt/strimzi/bin/launch_java.sh
+
+environment:
+  STRIMZI_VERSION: "0.47.0"
+  STRIMZI_HOME: /opt/strimzi
+  JAVA_HOME: /usr/lib/jvm/java-17-openjdk
+  JAVA_CLASSPATH: "/opt/strimzi/lib/*"
+  JAVA_MAIN: "io.strimzi.operator.cluster.Main"
+  PATH: /usr/lib/jvm/java-17-openjdk/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/strimzi/bin
+
+work-dir: /opt/strimzi
+
+accounts:
+  users:
+    - username: strimzi
+      uid: 1001
+      gid: 0
+  groups:
+    - groupname: root
+      gid: 0
+
+archs:
+  - x86_64
+
+annotations:
+  org.opencontainers.image.source: https://github.com/strimzi/strimzi-kafka-operator
+  org.opencontainers.image.title: "Strimzi Kafka Operator"
+  org.opencontainers.image.description: "Operator image used by the cluster and entity operator components of the Strimzi Kafka Operator"
+  org.opencontainers.image.version: "0.47.0"
+  org.opencontainers.image.vendor: "Strimzi"
+  org.opencontainers.image.licenses: "Apache-2.0"
+  org.opencontainers.image.url: "https://strimzi.io"
+  org.opencontainers.image.documentation: "https://strimzi.io/docs/"
+
+paths:
+  - path: /opt/strimzi
+    type: directory
+    uid: 1001
+    gid: 0
+    permissions: 0755
+  - path: /opt/strimzi/bin
+    type: directory
+    uid: 1001
+    gid: 0
+    permissions: 0755
+  - path: /opt/strimzi/lib
+    type: directory
+    uid: 1001
+    gid: 0
+    permissions: 0755
