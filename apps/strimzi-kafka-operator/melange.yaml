@@ -3,7 +3,7 @@ vars:
 
 package:
   name: strimzi-kafka-operator
-  version: "${{ vars.strimzi-version }}"
+  version: 0.46.1
   description: "Operator image used by the cluster and entity operator components of the Strimzi Kafka Operator"
   url: https://github.com/strimzi/strimzi-kafka-operator
   copyright:
