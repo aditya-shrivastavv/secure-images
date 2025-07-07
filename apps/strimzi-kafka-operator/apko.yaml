@@ -16,7 +16,7 @@ contents:
 cmd: /bin/bash
 
 environment:
-  STRIMZI_VERSION: 0.46.1
+  STRIMZI_VERSION: 0.46.0
   STRIMZI_HOME: /opt/strimzi
   JAVA_HOME: /usr/lib/jvm/java-17-openjdk
   JAVA_CLASSPATH: "/opt/strimzi/lib/*"
