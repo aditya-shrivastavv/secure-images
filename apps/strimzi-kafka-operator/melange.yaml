@@ -1,6 +1,9 @@
+vars:
+  strimzi-version: "0.46.1"
+
 package:
   name: strimzi-kafka-operator
-  version: 0.46.1
+  version: "${{ vars.strimzi-version }}"
   description: "Operator image used by the cluster and entity operator components of the Strimzi Kafka Operator"
   url: https://github.com/strimzi/strimzi-kafka-operator
   copyright:
@@ -32,14 +35,11 @@ environment:
     PATH: /usr/lib/jvm/java-17-openjdk/bin:$PATH
     STRIMZI_HOME: /opt/strimzi
 
-vars:
-  strimzi-version: "${{ package.version }}"
-
 pipeline:
   - uses: git-checkout
     with:
       repository: https://github.com/strimzi/strimzi-kafka-operator
-      tag: "${{ package.version }}"
+      tag: "${{ vars.strimzi-version }}"
       destination: /tmp/strimzi-source
 
   # Create strimzi user (matching the original Dockerfile)
