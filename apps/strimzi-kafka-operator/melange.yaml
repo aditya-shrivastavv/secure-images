@@ -33,13 +33,13 @@ environment:
     STRIMZI_HOME: /opt/strimzi
 
 vars:
-  strimzi-version: ${{ package.version }}
+  strimzi-version: "${{ package.version }}"
 
 pipeline:
   - uses: git-checkout
     with:
       repository: https://github.com/strimzi/strimzi-kafka-operator
-      tag: ${{ package.version }}
+      tag: "${{ package.version }}"
       destination: /tmp/strimzi-source
 
   # Create strimzi user (matching the original Dockerfile)
