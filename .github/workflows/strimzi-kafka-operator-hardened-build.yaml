@@ -1,4 +1,4 @@
-name: Strimzi-kafka hardening build
+name: Strimzi-kafka-operator hardening build
 on:
   workflow_dispatch:
 jobs:
