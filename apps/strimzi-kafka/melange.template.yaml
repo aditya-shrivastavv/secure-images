@@ -1,12 +1,22 @@
+{#-
+  This Jinja block processes the `software` list from versions.yaml
+  and creates a simple 'versions' dictionary using the 'name' field as the key.
+  The hyphens (-) strip whitespace to keep the output YAML clean.
+-#}
+{%- set versions = {} -%}
+{%- for item in software -%}
+  {%- set _ = versions.update({item.name: item.current_version}) -%}
+{%- endfor -%}
+
 vars:
-  kafka-version: "4.0.0"
-  kafka-exporter-version: "1.9.0"
-  jmx-exporter-version: "1.3.0"
-  strimzi-version: "0.46.0"
+  kafka-version: "{{ versions.apache_kafka }}"
+  kafka-exporter-version: "{{ versions.kafka_exporter }}"
+  jmx-exporter-version: "{{ versions.jmx_exporter }}"
+  strimzi-version: "{{ versions.strimzi_kafka_operator }}"
 
 package:
   name: strimzi-kafka
-  version: 0.46.0
+  version: "{{ versions.strimzi_kafka_operator }}"
   description: "Kafka image used by the Strimzi Kafka Operator to run Kafka clusters"
   url: https://github.com/strimzi/strimzi-kafka-operator
   copyright:
