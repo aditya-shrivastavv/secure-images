@@ -36,7 +36,7 @@ pipeline:
   - uses: git-checkout
     with:
       repository: https://github.com/strimzi/strimzi-kafka-operator
-      tag: "${{ vars.strimzi-version }}"
+      tag: "{{ versions.strimzi_kafka_operator }}"
       destination: /tmp/strimzi-source
 
   # Create strimzi user (matching the original Dockerfile)
