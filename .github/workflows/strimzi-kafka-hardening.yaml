@@ -21,14 +21,14 @@ jobs:
         with:
           template_path: './apps/strimzi-kafka/melange.template.yaml'
           output_path: './apps/strimzi-kafka/melange.yaml'
-          variables_file: './versions.yaml
+          variables_file: './versions.yaml'
 
       - name: Render apko.yaml from template
         uses: lexty/jinja2-renderer@v1
         with:
           template_path: './apps/strimzi-kafka/apko.template.yaml'
           output_path: './apps/strimzi-kafka/apko.yaml'
-          variables_file: './versions.yaml
+          variables_file: './versions.yaml'
 
       # - name: Docker Login
       #   uses: docker/login-action@3.4.0
