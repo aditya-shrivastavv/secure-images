@@ -13,10 +13,10 @@ softwares:
   options:
     allow_prerelease: false
     strip_prefix_v: true
-- name: Requests (Python Library)
-  source: pypi
-  identifier: requests
-  current_version: 2.32.4
+- name: Strimzi-kafka-operator
+  source: github_release
+  identifier: strimzi/strimzi-kafka-operator
+  current_version: 0.45.0
   options:
     allow_prerelease: false
     strip_prefix_v: true
