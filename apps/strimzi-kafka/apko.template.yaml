@@ -1,12 +1,3 @@
-{#-
-  This Jinja block processes the `software` list from versions.yaml
-  and creates a simple 'versions' dictionary using the 'name' field as the key.
--#}
-{%- set versions = {} -%}
-{%- for item in softwares -%}
-  {%- set _ = versions.update({item.name: item.current_version}) -%}
-{%- endfor -%}
-
 contents:
   keyring:
     - https://packages.wolfi.dev/os/wolfi-signing.rsa.pub
