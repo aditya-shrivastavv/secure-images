@@ -1,9 +1,6 @@
-vars:
-  strimzi-version: "0.46.0"
-
 package:
   name: strimzi-kafka-operator
-  version: 0.46.0
+  version: {{ versions.strimzi_kafka_operator }}
   description: "Operator image used by the cluster and entity operator components of the Strimzi Kafka Operator"
   url: https://github.com/strimzi/strimzi-kafka-operator
   copyright:
@@ -90,24 +87,24 @@ pipeline:
       mkdir -p tmp
       
       # Extract each distribution zip into tmp (like the Makefile does)
-      if [ -f ../artifacts/binaries/cluster-operator-${{vars.strimzi-version}}-SNAPSHOT-dist.zip ]; then
+      if [ -f ../artifacts/binaries/cluster-operator-{{ versions.strimzi_kafka_operator }}-SNAPSHOT-dist.zip ]; then
         echo "Extracting cluster-operator distribution..."
-        unzip -qo ../artifacts/binaries/cluster-operator-${{vars.strimzi-version}}-SNAPSHOT-dist.zip -d tmp
+        unzip -qo ../artifacts/binaries/cluster-operator-{{ versions.strimzi_kafka_operator }}-SNAPSHOT-dist.zip -d tmp
       fi
       
-      if [ -f ../artifacts/binaries/topic-operator-${{vars.strimzi-version}}-SNAPSHOT-dist.zip ]; then
+      if [ -f ../artifacts/binaries/topic-operator-{{ versions.strimzi_kafka_operator }}-SNAPSHOT-dist.zip ]; then
         echo "Extracting topic-operator distribution..."
-        unzip -qo ../artifacts/binaries/topic-operator-${{vars.strimzi-version}}-SNAPSHOT-dist.zip -d tmp
+        unzip -qo ../artifacts/binaries/topic-operator-{{ versions.strimzi_kafka_operator }}-SNAPSHOT-dist.zip -d tmp
       fi
       
-      if [ -f ../artifacts/binaries/user-operator-${{vars.strimzi-version}}-SNAPSHOT-dist.zip ]; then
+      if [ -f ../artifacts/binaries/user-operator-{{ versions.strimzi_kafka_operator }}-SNAPSHOT-dist.zip ]; then
         echo "Extracting user-operator distribution..."
-        unzip -qo ../artifacts/binaries/user-operator-${{vars.strimzi-version}}-SNAPSHOT-dist.zip -d tmp
+        unzip -qo ../artifacts/binaries/user-operator-{{ versions.strimzi_kafka_operator }}-SNAPSHOT-dist.zip -d tmp
       fi
       
-      if [ -f ../artifacts/binaries/kafka-init-${{vars.strimzi-version}}-SNAPSHOT-dist.zip ]; then
+      if [ -f ../artifacts/binaries/kafka-init-{{ versions.strimzi_kafka_operator }}-SNAPSHOT-dist.zip ]; then
         echo "Extracting kafka-init distribution..."
-        unzip -qo ../artifacts/binaries/kafka-init-${{vars.strimzi-version}}-SNAPSHOT-dist.zip -d tmp
+        unzip -qo ../artifacts/binaries/kafka-init-{{ versions.strimzi_kafka_operator }}-SNAPSHOT-dist.zip -d tmp
       fi
       
       # Copy from tmp/bin/ and tmp/lib/ like the Dockerfile does
@@ -177,7 +174,7 @@ pipeline:
       # Create environment setup files in destdir
       mkdir -p ${{targets.destdir}}/usr/local/bin
       echo '#!/bin/bash' > ${{targets.destdir}}/usr/local/bin/strimzi-env.sh
-      echo "export STRIMZI_VERSION=${{vars.strimzi-version}}" >> ${{targets.destdir}}/usr/local/bin/strimzi-env.sh
+      echo "export STRIMZI_VERSION={{ versions.strimzi_kafka_operator }}" >> ${{targets.destdir}}/usr/local/bin/strimzi-env.sh
       echo 'export STRIMZI_HOME=/opt/strimzi' >> ${{targets.destdir}}/usr/local/bin/strimzi-env.sh
       echo 'export PATH=$PATH:/opt/strimzi/bin' >> ${{targets.destdir}}/usr/local/bin/strimzi-env.sh
       chmod +x ${{targets.destdir}}/usr/local/bin/strimzi-env.sh
