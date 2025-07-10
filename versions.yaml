@@ -2,28 +2,28 @@ softwares:
 - name: strimzi_kafka_operator
   source: github_release
   identifier: strimzi/strimzi-kafka-operator
-  current_version: 0.46.1
+  current_version: 0.46.0
   options:
     allow_prerelease: false
     strip_prefix_v: true
 - name: kafka_exporter
   source: github_release
   identifier: danielqsj/kafka_exporter
-  current_version: 1.8.0
+  current_version: 1.7.0
   options:
     allow_prerelease: false
     strip_prefix_v: true
 - name: apache_kafka
   source: apache_archive
   identifier: kafka
-  current_version: 3.7.0
+  current_version: 3.6.0
   options:
     allow_prerelease: false
     strip_prefix_v: true
 - name: jmx_exporter
   source: apache_archive
   identifier: prometheus/jmx_exporter
-  current_version: 3.7.0
+  current_version: 3.6.0
   options:
     allow_prerelease: false
     strip_prefix_v: true
