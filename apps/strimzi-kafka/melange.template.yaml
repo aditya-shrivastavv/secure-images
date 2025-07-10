@@ -112,7 +112,7 @@ pipeline:
     runs: |
       echo "export KAFKA_HOME=/opt/kafka" >> /etc/environment
       echo "export KAFKA_VERSION={{ versions.apache_kafka }}" >> /etc/environment
-      echo "export STRIMZI_VERSION=${{vars.strimzi-version}}" >> /etc/environment
+      echo "export STRIMZI_VERSION={{ versions.strimzi_kafka_operator }}" >> /etc/environment
       echo "export KAFKA_EXPORTER_HOME=/opt/kafka-exporter" >> /etc/environment
       echo "export KAFKA_EXPORTER_VERSION={{ versions.kafka_exporter }}" >> /etc/environment
       echo "export JMX_EXPORTER_HOME=/opt/prometheus-jmx-exporter" >> /etc/environment
