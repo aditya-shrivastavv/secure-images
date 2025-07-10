@@ -1,2 +1,6 @@
+# scripts/versioning/requirements.txt
 requests
 PyYAML
+beautifulsoup4
+lxml
+packaging
