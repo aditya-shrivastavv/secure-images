@@ -1,13 +1,17 @@
-# scripts/update_versions.py
+# scripts/versioning/update_versions.py
 import os
 import sys
+import re
 import yaml
 import requests
+from bs4 import BeautifulSoup
+from packaging.version import Version, InvalidVersion
 
 # --- Configuration ---
-VERSIONS_FILE = "versions.yaml"
+VERSIONS_FILE = "versions.yaml" # Renamed to match your file
+APACHE_ARCHIVE_BASE = "https://archive.apache.org/dist"
 GITHUB_API_BASE = "https://api.github.com"
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN") # For authenticated requests to avoid rate limits
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 # --- Helper Functions ---
 def set_output(name, value):
@@ -17,6 +21,41 @@ def set_output(name, value):
     print(f"==> Set output {name}={value}")
 
 # --- Fetcher Functions ---
+
+# NEW: Custom fetcher for Apache Archive HTML pages
+def fetch_apache_archive_version(identifier, options):
+    """
+    Fetches the latest version by parsing an Apache Archive directory listing.
+    """
+    url = f"{APACHE_ARCHIVE_BASE}/{identifier}/"
+    print(f"  Fetching from Apache Archive: {url}")
+    response = requests.get(url)
+    response.raise_for_status()
+
+    soup = BeautifulSoup(response.text, 'lxml')
+    versions = []
+    # Regular expression to match version-like directory names (e.g., 3.7.0/)
+    version_pattern = re.compile(r'^\d+\.\d+\.\d+/$')
+
+    for link in soup.find_all('a'):
+        href = link.get('href')
+        if href and version_pattern.match(href):
+            try:
+                # Strip the trailing slash and create a Version object
+                version_str = href[:-1]
+                versions.append(Version(version_str))
+            except InvalidVersion:
+                # Ignore entries that look like versions but aren't (e.g., weird tags)
+                continue
+
+    if not versions:
+        print(f"Warning: No valid versions found for {identifier} at {url}")
+        return None
+
+    # The max() of a list of Version objects will be the latest version
+    latest_version = max(versions)
+    return str(latest_version)
+
 def fetch_github_release(identifier, options):
     """Fetches the latest release version from GitHub."""
     allow_prerelease = options.get("allow_prerelease", False)
@@ -27,7 +66,6 @@ def fetch_github_release(identifier, options):
         headers["Authorization"] = f"token {GITHUB_TOKEN}"
 
     if allow_prerelease:
-        # Get all releases and pick the first one (most recent)
         url = f"{GITHUB_API_BASE}/repos/{identifier}/releases"
         response = requests.get(url, headers=headers)
         response.raise_for_status()
@@ -36,7 +74,6 @@ def fetch_github_release(identifier, options):
             return None
         version = response.json()[0]["tag_name"]
     else:
-        # Get the 'latest' stable release
         url = f"{GITHUB_API_BASE}/repos/{identifier}/releases/latest"
         response = requests.get(url, headers=headers)
         response.raise_for_status()
@@ -55,15 +92,19 @@ def main():
         print(f"Error: {VERSIONS_FILE} not found!")
         sys.exit(1)
 
+    # NEW: Register the custom fetcher
     fetchers = {
         "github_release": fetch_github_release,
+        "apache_archive": fetch_apache_archive_version,
     }
 
     changes_made = False
-    for item in data.get("softwares", []):
+    # FIX: Changed 'softwares' to 'software' to match your YAML file structure
+    for item in data.get("software", []):
         name = item["name"]
         source = item["source"]
-        identifier = item["identifier"]
+        # Identifier can be optional for some sources, handle gracefully
+        identifier = item.get("identifier")
         current_version = item["current_version"]
         options = item.get("options", {})
 
@@ -72,6 +113,11 @@ def main():
         if source not in fetchers:
             print(f"Warning: Unknown source '{source}' for {name}. Skipping.")
             continue
+        
+        # Some fetchers might not need an identifier
+        if source in ["apache_archive", "github_release"] and not identifier:
+             print(f"Warning: Source '{source}' for {name} requires an 'identifier'. Skipping.")
+             continue
 
         try:
             fetcher_func = fetchers[source]
@@ -81,8 +127,9 @@ def main():
                 print(f"  Found new version: {latest_version} (was {current_version})")
                 item["current_version"] = latest_version
                 changes_made = True
-            else:
+            elif latest_version:
                 print(f"  No new version found. Current: {current_version}")
+            # If latest_version is None, a warning was already printed by the fetcher
 
         except requests.exceptions.RequestException as e:
             print(f"Error fetching version for {name}: {e}")
@@ -90,10 +137,9 @@ def main():
             print(f"An unexpected error occurred for {name}: {e}")
 
     if changes_made:
-        print("\nChanges were made. Updating versions.yml...")
+        print(f"\nChanges were made. Updating {VERSIONS_FILE}...")
         try:
             with open(VERSIONS_FILE, 'w') as f:
-                # Use sort_keys=False to preserve the order from the original file
                 yaml.dump(data, f, sort_keys=False, indent=2)
             set_output("CHANGES_MADE", "true")
         except Exception as e:
