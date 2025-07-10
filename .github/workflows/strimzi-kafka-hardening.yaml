@@ -16,12 +16,12 @@ jobs:
       # - name: Set up QEMU
       #   uses: docker/setup-qemu-action@v3
 
-      - name: Prepare Melange/Apko Configurations
-        uses: chuhlomin/render-template@v1.5
-        with:
-          template: ./apps/strimzi-kafka/melange.template.yaml
-          vars_path: ./versions.yaml
-          result_path: ./apps/strimzi-kafka/melange.yaml
+      - name: Generate melange.yaml and apko.yaml from templates
+        run: |
+          python scripts/render_templates/render_templates.py \
+            --versions-file ./versions.yaml \
+            --template-dir ./apps/strimzi-kafka \
+            --output-dir ./apps/strimzi-kafka
 
       - name: Check env now
         run: |
