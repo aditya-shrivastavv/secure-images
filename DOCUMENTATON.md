@@ -1,5 +1,19 @@
 # Documentation
 
+## `versions.yaml` structure
+
+```yaml
+Fields:
+  name: A human-readable name for the software.
+  source: The method to use for fetching the version.
+          Supported: 'github_release', 'pypi'.
+  identifier: The unique ID for the source (e.g., 'owner/repo' for GitHub, 'package-name' for PyPI).
+  current_version: The last known version. The script will update this.
+  options:
+    allow_prerelease: (for github_release) Set to true to include pre-releases. Defaults to false.
+    strip_prefix_v: (for github_release) Set to true to remove a leading 'v' from the tag name. Defaults to true.
+```
+
 ## How do you build container images?
 
 - Dockerfile
