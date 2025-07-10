@@ -27,3 +27,10 @@ softwares:
   options:
     allow_prerelease: false
     strip_prefix_v: true
+- name: prometheus
+    source: github_release
+    identifier: prometheus/prometheus
+    current_version: "2.53.0"
+    options:
+      allow_prerelease: false
+      strip_prefix_v: true
