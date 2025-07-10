@@ -19,11 +19,11 @@ jobs:
       - name: Prepare Melange/Apko Configurations
         uses: chuhlomin/render-template@v1.5
         with:
-          templates: |
+          template: |
             ./apps/strimzi-kafka/melange.template.yaml
             ./apps/strimzi-kafka/apko.template.yaml
-          data_file: ./versions.yaml
-          output_dir: ./apps/strimzi-kafka/
+          vars_path: ./versions.yaml
+          result_path: ./apps/strimzi-kafka/
 
       - name: Check env now
         run: |
