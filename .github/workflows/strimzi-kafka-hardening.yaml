@@ -19,11 +19,9 @@ jobs:
       - name: Prepare Melange/Apko Configurations
         uses: chuhlomin/render-template@v1.5
         with:
-          template: |
-            ./apps/strimzi-kafka/melange.template.yaml
-            ./apps/strimzi-kafka/apko.template.yaml
+          template: ./apps/strimzi-kafka/melange.template.yaml
           vars_path: ./versions.yaml
-          result_path: ./apps/strimzi-kafka/
+          result_path: ./apps/strimzi-kafka/melange.yaml
 
       - name: Check env now
         run: |
@@ -32,7 +30,7 @@ jobs:
           ls -l
           cat melange.yaml
           echo "-----"
-          cat apko.yaml
+          # cat apko.yaml
 
       # - name: Docker Login
       #   uses: docker/login-action@3.4.0
