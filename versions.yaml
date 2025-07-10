@@ -21,7 +21,7 @@ softwares:
     allow_prerelease: false
     strip_prefix_v: true
 - name: jmx_exporter
-  source: apache_archive
+  source: github_release
   identifier: prometheus/jmx_exporter
   current_version: 3.6.0
   options:
