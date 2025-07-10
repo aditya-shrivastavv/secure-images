@@ -18,6 +18,7 @@ jobs:
 
       - name: Generate melange.yaml and apko.yaml from templates
         run: |
+          pip install -r scripts/render_templates/requirements.txt
           python scripts/render_templates/render_templates.py \
             --versions-file ./versions.yaml \
             --template-dir ./apps/strimzi-kafka \
