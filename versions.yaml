@@ -1,45 +1,29 @@
-# versions.yml
-# List of software to track for latest versions.
-
-# Fields:
-#   name: A human-readable name for the software.
-#   source: The method to use for fetching the version.
-#           Supported: 'github_release', 'pypi'.
-#   identifier: The unique ID for the source (e.g., 'owner/repo' for GitHub, 'package-name' for PyPI).
-#   current_version: The last known version. The script will update this.
-#   options:
-#     allow_prerelease: (for github_release) Set to true to include pre-releases. Defaults to false.
-#     strip_prefix_v: (for github_release) Set to true to remove a leading 'v' from the tag name. Defaults to true.
-
 softwares:
-  - name: "Node.js"
-    source: "github_release"
-    identifier: "nodejs/node"
-    current_version: "20.10.0"
-    options:
-      allow_prerelease: false
-      strip_prefix_v: true
-
-  - name: "Kubernetes"
-    source: "github_release"
-    identifier: "kubernetes/kubernetes"
-    current_version: "1.28.4"
-    options:
-      allow_prerelease: false
-      strip_prefix_v: true
-
-  - name: "Requests (Python Library)"
-    source: "pypi"
-    identifier: "requests"
-    current_version: "2.31.0"
-    options:
-      allow_prerelease: false
-      strip_prefix_v: true
-
-  - name: "Terraform"
-    source: "github_release"
-    identifier: "hashicorp/terraform"
-    current_version: "1.6.5"
-    options:
-      allow_prerelease: false
-      strip_prefix_v: true
+- name: Node.js
+  source: github_release
+  identifier: nodejs/node
+  current_version: 24.4.0
+  options:
+    allow_prerelease: false
+    strip_prefix_v: true
+- name: Kubernetes
+  source: github_release
+  identifier: kubernetes/kubernetes
+  current_version: 1.33.2
+  options:
+    allow_prerelease: false
+    strip_prefix_v: true
+- name: Requests (Python Library)
+  source: pypi
+  identifier: requests
+  current_version: 2.32.4
+  options:
+    allow_prerelease: false
+    strip_prefix_v: true
+- name: Terraform
+  source: github_release
+  identifier: hashicorp/terraform
+  current_version: 1.12.2
+  options:
+    allow_prerelease: false
+    strip_prefix_v: true
