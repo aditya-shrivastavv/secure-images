@@ -7,7 +7,6 @@ import requests
 # --- Configuration ---
 VERSIONS_FILE = "versions.yaml"
 GITHUB_API_BASE = "https://api.github.com"
-PYPI_API_BASE = "https://pypi.org/pypi"
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN") # For authenticated requests to avoid rate limits
 
 # --- Helper Functions ---
@@ -18,7 +17,6 @@ def set_output(name, value):
     print(f"==> Set output {name}={value}")
 
 # --- Fetcher Functions ---
-
 def fetch_github_release(identifier, options):
     """Fetches the latest release version from GitHub."""
     allow_prerelease = options.get("allow_prerelease", False)
@@ -48,15 +46,7 @@ def fetch_github_release(identifier, options):
         return version[1:]
     return version
 
-def fetch_pypi_version(identifier, options):
-    """Fetches the latest version from PyPI."""
-    url = f"{PYPI_API_BASE}/{identifier}/json"
-    response = requests.get(url)
-    response.raise_for_status()
-    return response.json()["info"]["version"]
-
 # --- Main Logic ---
-
 def main():
     try:
         with open(VERSIONS_FILE, 'r') as f:
@@ -67,7 +57,6 @@ def main():
 
     fetchers = {
         "github_release": fetch_github_release,
-        "pypi": fetch_pypi_version,
     }
 
     changes_made = False
