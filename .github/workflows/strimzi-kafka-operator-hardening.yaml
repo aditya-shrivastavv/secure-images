@@ -24,10 +24,10 @@ jobs:
       - name: Printing melange and apko
         run: |
           echo "---------- melange.yaml ----------"
-          cat ./apps/strimzi-kafka/melange.yaml
+          cat ./apps/strimzi-kafka-operator/melange.yaml
 
           echo "------------ apko.yaml -------------"
-          cat ./apps/strimzi-kafka/apko.yaml
+          cat ./apps/strimzi-kafka-operator/apko.yaml
 
       - name: Docker Login
         uses: docker/login-action@3.4.0
@@ -54,13 +54,13 @@ jobs:
         shell: bash
         working-directory: ./apps/strimzi-kafka-operator
         run: |
-          sudo melange build melange.yaml --runner docker
+          melange build melange.yaml --runner docker
 
       - name: Create OCI image with apko
         shell: bash
         working-directory: ./apps/strimzi-kafka-operator
         run: |
-          sudo apko build apko.yaml strimzi-kafka-operator:latest strimzi-kafka-operator.tar
+          apko build apko.yaml strimzi-kafka-operator:latest strimzi-kafka-operator.tar
 
       - name: Load image into Docker
         shell: bash
