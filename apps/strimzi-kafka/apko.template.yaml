@@ -3,7 +3,7 @@
   and creates a simple 'versions' dictionary using the 'name' field as the key.
 -#}
 {%- set versions = {} -%}
-{%- for item in software -%}
+{%- for item in softwares -%}
   {%- set _ = versions.update({item.name: item.current_version}) -%}
 {%- endfor -%}
 
