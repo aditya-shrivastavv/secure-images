@@ -1,4 +1,4 @@
-name: Strimzi-kafka hardening build
+name: Strimzi-kafka hardening
 on:
   workflow_dispatch:
 jobs:
@@ -11,10 +11,7 @@ jobs:
       - name: Checkout Repo (secure-images)
         uses: actions/checkout@v4
         with:
-          clean: false  
-
-      # - name: Set up QEMU
-      #   uses: docker/setup-qemu-action@v3
+          clean: false
 
       - name: Generate melange.yaml and apko.yaml from templates
         run: |
@@ -24,97 +21,69 @@ jobs:
             --template-dir ./apps/strimzi-kafka \
             --output-dir ./apps/strimzi-kafka
 
-      - name: Check env now
+      - name: Docker Login
+        uses: docker/login-action@3.4.0
+        with:
+          username: ${{ vars.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Setup Melange & Apko
+        shell: bash
         run: |
-          tree -h
-          cd ./apps/strimzi-kafka
-          ls -l
-          cat melange.yaml
-          echo -n "-----"
-          cat apko.yaml
+          echo "---------- Setup: melange ----------"
+          curl -sSL https://github.com/chainguard-dev/melange/releases/download/v0.28.0/melange_0.28.0_linux_amd64.tar.gz -o melange.tar.gz
+          tar -xzf melange.tar.gz
+          sudo mv melange_0.28.0_linux_amd64/melange /usr/local/bin/melange
+          sudo chmod +x /usr/local/bin/melange
 
-      # - name: Docker Login
-      #   uses: docker/login-action@3.4.0
-      #   with:
-      #     username: ${{ vars.DOCKERHUB_USERNAME }}
-      #     password: ${{ secrets.DOCKERHUB_TOKEN }}
+          echo "---------- Setup: apko ----------"
+          curl -sSL https://github.com/chainguard-dev/apko/releases/download/v0.29.0/apko_0.29.0_linux_amd64.tar.gz -o apko.tar.gz
+          tar -xzf apko.tar.gz
+          sudo mv apko_0.29.0_linux_amd64/apko /usr/local/bin/apko
+          sudo chmod +x /usr/local/bin/apko
 
-      # - name: Setup Melange & Apko
-      #   shell: bash
-      #   run: |
-      #     echo "---------- Setup: melange ----------"
-      #     curl -sSL https://github.com/chainguard-dev/melange/releases/download/v0.28.0/melange_0.28.0_linux_amd64.tar.gz -o melange.tar.gz
-      #     tar -xzf melange.tar.gz
-      #     sudo mv melange_0.28.0_linux_amd64/melange /usr/local/bin/melange
-      #     sudo chmod +x /usr/local/bin/melange
+      - name: Build .apk package with Melange
+        shell: bash
+        working-directory: ./apps/strimzi-kafka
+        run: |
+          melange build melange.yaml --runner docker
 
-      #     echo "---------- Setup: apko ----------"
-      #     curl -sSL https://github.com/chainguard-dev/apko/releases/download/v0.29.0/apko_0.29.0_linux_amd64.tar.gz -o apko.tar.gz
-      #     tar -xzf apko.tar.gz
-      #     sudo mv apko_0.29.0_linux_amd64/apko /usr/local/bin/apko
-      #     sudo chmod +x /usr/local/bin/apko
+      - name: Create OCI image with apko
+        shell: bash
+        working-directory: ./apps/strimzi-kafka
+        run: |
+          apko build apko.yaml strimzi-kafka:latest strimzi-kafka.tar
 
-      # - name: Build .apk package with Melange
-      #   shell: bash
-      #   working-directory: ./apps/strimzi-kafka
-      #   run: |
-      #     sudo melange build melange.yaml --runner docker
+      - name: Load image into Docker
+        shell: bash
+        working-directory: ./apps/strimzi-kafka
+        run: |
+          docker load < strimzi-kafka.tar
+          docker images
 
-      # - name: Create OCI image with apko
-      #   shell: bash
-      #   working-directory: ./apps/strimzi-kafka
-      #   run: |
-      #     sudo apko build apko.yaml strimzi-kafka:latest strimzi-kafka.tar
+      - name: Check kafka version
+        continue-on-error: true
+        run: |
+          docker run --rm --entrypoint /opt/kafka/bin/kafka-topics.sh strimzi-kafka:latest-amd64 --version
 
-      # - name: Load image into Docker
-      #   shell: bash
-      #   working-directory: ./apps/strimzi-kafka
-      #   run: |
-      #     docker load < strimzi-kafka.tar
-      #     docker images
+      - name: Scan image - Grype
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock anchore/grype:v0.94.0 \
+          strimzi-kafka:latest-amd64 | tee strimzi-kafka_latest-amd64_grype.txt
 
-      # - name: Check kafka version
-      #   continue-on-error: true
-      #   run: |
-      #     docker run --rm --entrypoint /opt/kafka/bin/kafka-topics.sh strimzi-kafka:latest-amd64 --version
+      - name: Upload grype report as artifact
+        id: artifact-upload-grype
+        uses: actions/upload-artifact@v4
+        with:
+          name: Grype-report-strimzi-kafka
+          path: strimzi-kafka_latest-amd64_grype.txt
 
-      # - name: Scan image - Grype
-      #   run: |
-      #     docker run --rm -v /var/run/docker.sock:/var/run/docker.sock anchore/grype:v0.94.0 \
-      #     strimzi-kafka:latest-amd64 | tee strimzi-kafka_latest-amd64_pre_grype.txt
-
-      # - name: Upload grype report as artifact
-      #   id: artifact-upload-grype
-      #   uses: actions/upload-artifact@v4
-      #   with:
-      #     name: Grype-report-strimzi-kafka
-      #     path: strimzi-kafka_latest-amd64_pre_grype.txt
-        
-      # - name: Install Cosign
-      #   uses: sigstore/cosign-installer@v3.9.1
-      #   with:
-      #     cosign-release: 'v2.5.2'
-
-      # - name: Tag images
-      #   run: |
-      #     docker image tag strimzi-kafka:latest-amd64 ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka_amd64:latest
-      #     docker image tag strimzi-kafka:latest-arm64 ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka_arm64:latest
-
-      # - name: Sign images with cosign
-      #   shell: bash
-      #   env:
-      #     COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
-      #   run: |
-      #     echo "${{ secrets.COSIGN_PRIVATE_KEY }}" > cosign.key
-      #     cosign sign --yes --key cosign.key ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka_amd64:latest
-      #     cosign sign --yes --key cosign.key ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka_arm64:latest
-
-      # - name: Push images to registry
-      #   shell: bash
-      #   run: |
-      #     echo "-------- Pushing strimzi-kafka:latest-amd64 --------"
-      #     docker push ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka_amd64:latest
-
-      #     echo "-------- Pushing strimzi-kafka:latest-arm64 --------"
-      #     docker push ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka_arm64:latest
+      - name: Tag images
+        run: |
+          docker image tag strimzi-kafka:latest-amd64 ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka_amd64:latest
           
+      - name: Push images to registry
+        shell: bash
+        run: |
+          echo "-------- Pushing strimzi-kafka:latest-amd64 --------"
+          docker push ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka_amd64:latest
