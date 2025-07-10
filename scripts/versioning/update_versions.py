@@ -42,6 +42,7 @@ def fetch_github_release(identifier, options):
         url = f"{GITHUB_API_BASE}/repos/{identifier}/releases/latest"
         response = requests.get(url, headers=headers)
         response.raise_for_status()
+        print(response.json())
         version = response.json()["tag_name"]
 
     if strip_prefix_v and version.startswith('v'):
