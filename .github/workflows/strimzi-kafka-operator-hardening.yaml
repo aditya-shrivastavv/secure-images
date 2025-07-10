@@ -1,14 +1,11 @@
-name: Strimzi-kafka-operator hardening build
+name: Strimzi-kafka-operator hardening
 on:
   workflow_dispatch:
 jobs:
   build-scan:
     runs-on: ubuntu-latest
-    env:
-      PACKAGE: kafka-operator
-      VERSION: 4.0.0
-      STRIMZI_KAFKA_OPERATOR_NAME: strimzi/strimzi-kafka-operator
-      STRIMZI_KAFKA_OPERATOR_VERSION: 0.47.0
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout Repo (secure-images)
@@ -16,8 +13,21 @@ jobs:
         with:
           clean: false  
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+      - name: Generate melange.yaml and apko.yaml from templates
+        run: |
+          pip install -r scripts/render_templates/requirements.txt
+          python scripts/render_templates/render_templates.py \
+            --versions-file ./versions.yaml \
+            --template-dir ./apps/strimzi-kafka-operator \
+            --output-dir ./apps/strimzi-kafka-operator
+
+      - name: Printing melange and apko
+        run: |
+          echo "---------- melange.yaml ----------"
+          cat ./apps/strimzi-kafka/melange.yaml
+
+          echo "------------ apko.yaml -------------"
+          cat ./apps/strimzi-kafka/apko.yaml
 
       - name: Docker Login
         uses: docker/login-action@3.4.0
@@ -76,31 +86,12 @@ jobs:
           name: Grype-report-strimzi-kafka
           path: strimzi-kafka-operator_latest-amd64_grype.txt
         
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@v3.9.1
-        with:
-          cosign-release: 'v2.5.2'
-
       - name: Tag images
         run: |
           docker image tag strimzi-kafka-operator:latest-amd64 ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka-operator_amd64:latest
-          # docker image tag strimzi-kafka-operator:latest-arm64 ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka-operator_arm64:latest
-
-      # - name: Sign images with cosign
-      #   shell: bash
-      #   env:
-      #     COSIGN_PASSWORD: ${{ secrets.COSIGN_PASSWORD }}
-      #   run: |
-      #     echo "${{ secrets.COSIGN_PRIVATE_KEY }}" > cosign.key
-      #     cosign sign --yes --key cosign.key ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka-operator_amd64:latest
-      #     # cosign sign --yes --key cosign.key ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka-operator_arm64:latest
-
+          
       - name: Push images to registry
         shell: bash
         run: |
           echo "-------- Pushing strimzi-kafka:latest-amd64 --------"
           docker push ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka-operator_amd64:latest
-
-          # echo "-------- Pushing strimzi-kafka:latest-arm64 --------"
-          # docker push ${{ vars.DOCKERHUB_USERNAME }}/strimzi-kafka-operator_arm64:latest
-          
