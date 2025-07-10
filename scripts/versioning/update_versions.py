@@ -5,7 +5,7 @@ import yaml
 import requests
 
 # --- Configuration ---
-VERSIONS_FILE = "versions.yml"
+VERSIONS_FILE = "versions.yaml"
 GITHUB_API_BASE = "https://api.github.com"
 PYPI_API_BASE = "https://pypi.org/pypi"
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN") # For authenticated requests to avoid rate limits
