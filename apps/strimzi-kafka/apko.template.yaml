@@ -38,7 +38,6 @@ accounts:
 
 archs:
   - x86_64
-  - aarch64
 
 annotations:
   org.opencontainers.image.source: https://github.com/strimzi/strimzi-kafka-operator
