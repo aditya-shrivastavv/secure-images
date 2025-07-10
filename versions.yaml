@@ -1,29 +1,8 @@
 softwares:
-- name: Node.js
-  source: github_release
-  identifier: nodejs/node
-  current_version: 24.4.0
-  options:
-    allow_prerelease: false
-    strip_prefix_v: true
-- name: Kubernetes
-  source: github_release
-  identifier: kubernetes/kubernetes
-  current_version: 1.33.2
-  options:
-    allow_prerelease: false
-    strip_prefix_v: true
 - name: Strimzi-kafka-operator
   source: github_release
   identifier: strimzi/strimzi-kafka-operator
   current_version: 0.46.1
-  options:
-    allow_prerelease: false
-    strip_prefix_v: true
-- name: Terraform
-  source: github_release
-  identifier: hashicorp/terraform
-  current_version: 1.12.2
   options:
     allow_prerelease: false
     strip_prefix_v: true
