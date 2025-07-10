@@ -30,6 +30,15 @@ jobs:
           output_path: './apps/strimzi-kafka/apko.yaml'
           variables_file: './versions.yaml'
 
+      - name: Check env now
+        run: |
+          tree -h
+          cd ./apps/strimzi-kafka
+          ls -l
+          cat melange.yaml
+          echo "-----"
+          cat apko.yaml
+
       # - name: Docker Login
       #   uses: docker/login-action@3.4.0
       #   with:
