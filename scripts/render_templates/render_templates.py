@@ -28,7 +28,7 @@ def main():
     # Create the 'versions' context dictionary for Jinja, using 'name' as the key
     versions_context = {
         item['name']: item['current_version']
-        for item in versions_data.get("software", [])
+        for item in versions_data.get("softwares", [])
     }
     print("==> Using versions for template context:")
     print(versions_context)
