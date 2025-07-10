@@ -1,0 +1,69 @@
+# apps/prometheus/melange.template.yaml
+# Template for building the Prometheus monitoring system.
+
+package:
+  name: prometheus
+  version: "{{ versions.prometheus }}"
+  description: "The Prometheus monitoring system and time series database"
+  url: https://github.com/prometheus/prometheus
+  copyright:
+    - license: Apache-2.0
+  target-architecture:
+    - x86_64
+
+environment:
+  contents:
+    keyring:
+      - https://packages.wolfi.dev/os/wolfi-signing.rsa.pub
+    repositories:
+      - https://packages.wolfi.dev/os
+    packages:
+      # Build-time dependencies for Prometheus
+      - wolfi-base
+      - bash
+      - ca-certificates
+      - git
+      - go
+      - make
+
+pipeline:
+  # Step 1: Check out the correct version of the source code.
+  # Prometheus uses a 'v' prefix for its tags.
+  - uses: git-checkout
+    with:
+      repository: https://github.com/prometheus/prometheus
+      tag: "v{{ versions.prometheus }}"
+      destination: /tmp/prometheus-source
+
+  # Step 2: Use the project's own Makefile to build the binaries.
+  # This is the most reliable method as it uses their official build process,
+  # which handles tooling (like 'promu') and asset embedding.
+  - name: Build Prometheus binaries
+    runs: |
+      cd /tmp/prometheus-source
+      make build
+
+  # Step 3: Create the directory structure for the final package.
+  - name: Create package directories
+    runs: |
+      # Binaries will go in /usr/bin
+      mkdir -p ${{targets.destdir}}/usr/bin
+      # Default configuration file goes in /etc/prometheus
+      mkdir -p ${{targets.destdir}}/etc/prometheus
+      # Console templates and libraries go in /usr/share/prometheus
+      mkdir -p ${{targets.destdir}}/usr/share/prometheus/consoles
+      mkdir -p ${{targets.destdir}}/usr/share/prometheus/console_libraries
+
+  # Step 4: Copy the built artifacts into the correct locations.
+  - name: Install build artifacts
+    runs: |
+      # Copy the main binaries
+      cp /tmp/prometheus-source/prometheus ${{targets.destdir}}/usr/bin/
+      cp /tmp/prometheus-source/promtool ${{targets.destdir}}/usr/bin/
+
+      # Copy the default configuration file
+      cp /tmp/prometheus-source/documentation/examples/prometheus.yml ${{targets.destdir}}/etc/prometheus/prometheus.yml
+
+      # Copy the console templates and libraries
+      cp -r /tmp/prometheus-source/consoles/* ${{targets.destdir}}/usr/share/prometheus/consoles/
+      cp -r /tmp/prometheus-source/console_libraries/* ${{targets.destdir}}/usr/share/prometheus/console_libraries/
