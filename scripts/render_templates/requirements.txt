@@ -1,0 +1,3 @@
+# scripts/render_templates/requirements.txt
+PyYAML
+Jinja2
