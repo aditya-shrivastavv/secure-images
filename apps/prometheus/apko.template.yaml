@@ -1,0 +1,58 @@
+# apps/prometheus/apko.template.yaml
+# Template for creating a minimal Prometheus OCI image.
+
+contents:
+  keyring:
+    - https://packages.wolfi.dev/os/wolfi-signing.rsa.pub
+  repositories:
+    - https://packages.wolfi.dev/os
+    - "@local /tmp/packages" # This is where our melange-built package is found
+  packages:
+    # Runtime dependencies
+    - wolfi-base
+    - ca-certificates
+    # Our locally built prometheus package
+    - prometheus@local
+
+# The default command to run when the container starts.
+cmd: /usr/bin/prometheus --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/var/lib/prometheus
+
+# Run as a non-root user for better security.
+accounts:
+  users:
+    - username: prometheus
+      uid: 65534 # A common 'nobody' UID
+      gid: 65534
+  groups:
+    - groupname: prometheus
+      gid: 65534
+
+# The directory where Prometheus will store its data.
+work-dir: /var/lib/prometheus
+
+archs:
+  - x86_64
+
+# OCI image annotations for discovery and documentation.
+annotations:
+  org.opencontainers.image.source: https://github.com/prometheus/prometheus
+  org.opencontainers.image.title: "Prometheus"
+  org.opencontainers.image.description: "The Prometheus monitoring system and time series database"
+  org.opencontainers.image.version: "{{ versions.prometheus }}"
+  org.opencontainers.image.vendor: "Prometheus"
+  org.opencontainers.image.licenses: "Apache-2.0"
+  org.opencontainers.image.url: "https://prometheus.io"
+  org.opencontainers.image.documentation: "https://prometheus.io/docs/"
+
+# Define necessary paths and their permissions for the non-root user.
+paths:
+  - path: /etc/prometheus
+    type: directory
+    uid: 65534
+    gid: 65534
+    permissions: 0755
+  - path: /var/lib/prometheus
+    type: directory
+    uid: 65534
+    gid: 65534
+    permissions: 0755
