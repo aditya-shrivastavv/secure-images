@@ -30,8 +30,8 @@ jobs:
           cd ./apps/strimzi-kafka
           ls -l
           cat melange.yaml
-          echo "-----"
-          # cat apko.yaml
+          echo -n "-----"
+          cat apko.yaml
 
       # - name: Docker Login
       #   uses: docker/login-action@3.4.0
