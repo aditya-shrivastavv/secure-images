@@ -64,9 +64,11 @@ pipeline:
   # Create directories
   - name: Create directories
     runs: |
+      {% raw -%}
       mkdir -p ${{targets.destdir}}/opt/strimzi
       mkdir -p ${{targets.destdir}}/opt/strimzi/bin
       mkdir -p ${{targets.destdir}}/opt/strimzi/lib
+      {%- endraw %}
 
   # Build the project with Maven
   - name: Build Strimzi operators
@@ -108,6 +110,7 @@ pipeline:
       fi
       
       # Copy from tmp/bin/ and tmp/lib/ like the Dockerfile does
+      {% raw -%}
       echo "Copying binaries and libraries..."
       if [ -d tmp/bin ]; then
         cp -r tmp/bin/* ${{targets.destdir}}/opt/strimzi/bin/ 2>/dev/null || true
@@ -124,10 +127,12 @@ pipeline:
       ls -la ${{targets.destdir}}/opt/strimzi/bin/ || true
       echo "Contents of ${{targets.destdir}}/opt/strimzi/lib:"
       ls -la ${{targets.destdir}}/opt/strimzi/lib/ | head -10 || true
+      {%- endraw %}
 
   # Copy operator scripts (following Dockerfile approach)
   - name: Copy operator scripts
     runs: |
+      {% raw -%}
       cd /tmp/strimzi-source/docker-images/operator
       
       # Copy scripts from docker-images/operator/scripts/ like the Dockerfile does
@@ -155,10 +160,12 @@ pipeline:
       # List what scripts we have
       echo "Final contents of ${{targets.destdir}}/opt/strimzi/bin:"
       ls -la ${{targets.destdir}}/opt/strimzi/bin/ || true
+      {%- endraw %}
 
   # Set permissions (matching the original approach)
   - name: Set permissions
     runs: |
+      {% raw -%}
       # Set ownership and permissions like the original
       chown -R 1001:0 ${{targets.destdir}}/opt/strimzi
       chmod -R g+w ${{targets.destdir}}/opt/strimzi
@@ -167,16 +174,19 @@ pipeline:
       echo "Set permissions for strimzi user"
       echo "Final ownership check:"
       ls -la ${{targets.destdir}}/opt/strimzi/ || true
+      {%- endraw %}
 
   # Set environment variables (matching the original)
   - name: Set environment variables
     runs: |
       # Create environment setup files in destdir
-      mkdir -p ${{targets.destdir}}/usr/local/bin
-      echo '#!/bin/bash' > ${{targets.destdir}}/usr/local/bin/strimzi-env.sh
-      echo "export STRIMZI_VERSION={{ versions.strimzi_kafka_operator }}" >> ${{targets.destdir}}/usr/local/bin/strimzi-env.sh
+      mkdir -p {% raw -%}${{targets.destdir}}{%- endraw %}/usr/local/bin
+      echo '#!/bin/bash' > {% raw -%}${{targets.destdir}}{%- endraw %}/usr/local/bin/strimzi-env.sh
+      echo "export STRIMZI_VERSION={{ versions.strimzi_kafka_operator }}" >> {% raw -%}${{targets.destdir}}{%- endraw %}/usr/local/bin/strimzi-env.sh
+      {% raw -%}
       echo 'export STRIMZI_HOME=/opt/strimzi' >> ${{targets.destdir}}/usr/local/bin/strimzi-env.sh
       echo 'export PATH=$PATH:/opt/strimzi/bin' >> ${{targets.destdir}}/usr/local/bin/strimzi-env.sh
       chmod +x ${{targets.destdir}}/usr/local/bin/strimzi-env.sh
+      {%- endraw %}
       
       echo "Set environment variables"
