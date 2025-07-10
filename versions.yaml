@@ -17,6 +17,7 @@ softwares:
     identifier: "nodejs/node"
     current_version: "20.10.0"
     options:
+      allow_prerelease: false
       strip_prefix_v: true
 
   - name: "Kubernetes"
@@ -24,12 +25,16 @@ softwares:
     identifier: "kubernetes/kubernetes"
     current_version: "1.28.4"
     options:
+      allow_prerelease: false
       strip_prefix_v: true
 
   - name: "Requests (Python Library)"
     source: "pypi"
     identifier: "requests"
     current_version: "2.31.0"
+    options:
+      allow_prerelease: false
+      strip_prefix_v: true
 
   - name: "Terraform"
     source: "github_release"
