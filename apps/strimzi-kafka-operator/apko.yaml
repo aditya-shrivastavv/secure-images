@@ -16,7 +16,7 @@ contents:
 cmd: /bin/bash
 
 environment:
-  STRIMZI_VERSION: 0.46.0
+  STRIMZI_VERSION: {{ versions.strimzi_kafka_operator }}
   STRIMZI_HOME: /opt/strimzi
   JAVA_HOME: /usr/lib/jvm/java-17-openjdk
   JAVA_CLASSPATH: "/opt/strimzi/lib/*"
@@ -41,7 +41,7 @@ annotations:
   org.opencontainers.image.source: https://github.com/strimzi/strimzi-kafka-operator
   org.opencontainers.image.title: "Strimzi Kafka Operator"
   org.opencontainers.image.description: "Operator image used by the cluster and entity operator components of the Strimzi Kafka Operator"
-  org.opencontainers.image.version: "${{ vars.strimzi_version }}"
+  org.opencontainers.image.version: "{{ versions.strimzi_kafka_operator }}"
   org.opencontainers.image.vendor: "Strimzi"
   org.opencontainers.image.licenses: "Apache-2.0"
   org.opencontainers.image.url: "https://strimzi.io"
