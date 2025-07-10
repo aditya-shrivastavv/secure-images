@@ -72,7 +72,7 @@ def main():
     }
 
     changes_made = False
-    for item in data.get("software", []):
+    for item in data.get("softwares", []):
         name = item["name"]
         source = item["source"]
         identifier = item["identifier"]
