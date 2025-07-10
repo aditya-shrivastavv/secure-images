@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 from packaging.version import Version, InvalidVersion
 
 # --- Configuration ---
-VERSIONS_FILE = "versions.yaml" # Renamed to match your file
+VERSIONS_FILE = "versions.yaml"
 APACHE_ARCHIVE_BASE = "https://archive.apache.org/dist"
 GITHUB_API_BASE = "https://api.github.com"
 GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
@@ -100,7 +100,7 @@ def main():
 
     changes_made = False
     # FIX: Changed 'softwares' to 'software' to match your YAML file structure
-    for item in data.get("software", []):
+    for item in data.get("softwares", []):
         name = item["name"]
         source = item["source"]
         # Identifier can be optional for some sources, handle gracefully
