@@ -1,0 +1,47 @@
+name: Daily Version Updater
+
+on:
+  # Run daily at 8:00 AM UTC
+  schedule:
+    - cron: '0 8 * * *'
+  # Allow manual runs from the Actions tab
+  workflow_dispatch:
+
+jobs:
+  update-versions:
+    runs-on: ubuntu-latest
+    permissions:
+      # Required to checkout the code
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip' # Cache pip dependencies
+
+      - name: Install Python dependencies
+        run: pip install -r scripts/versioning/requirements.txt
+
+      - name: Run version update script
+        id: version_check
+        run: python scripts/versioning/update_versions.py
+        env:
+          # The GITHUB_TOKEN is automatically created by Actions
+          # and is used by the script for authenticated API requests
+          # to avoid rate limiting.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Commit and push changes
+        # This step only runs if the python script set the output CHANGES_MADE=true
+        if: env.CHANGES_MADE == 'true'
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add versions.yml
+          git commit -m "chore(versions): Update software versions"
+          git push
