@@ -21,6 +21,14 @@ jobs:
             --template-dir ./apps/strimzi-kafka \
             --output-dir ./apps/strimzi-kafka
 
+      - name: Printing melange and apko
+        run: |
+          echo "---------- melange.yaml ----------"
+          cat ./apps/strimzi-kafka/melange.yaml
+
+          echo "------------ apko.yaml -------------"
+          cat ./apps/strimzi-kafka/apko.yaml
+
       - name: Docker Login
         uses: docker/login-action@3.4.0
         with:
