@@ -4,7 +4,7 @@
   The hyphens (-) strip whitespace to keep the output YAML clean.
 -#}
 {%- set versions = {} -%}
-{%- for item in software -%}
+{%- for item in softwares -%}
   {%- set _ = versions.update({item.name: item.current_version}) -%}
 {%- endfor -%}
 
