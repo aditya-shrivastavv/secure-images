@@ -8,12 +8,6 @@
   {%- set _ = versions.update({item.name: item.current_version}) -%}
 {%- endfor -%}
 
-vars:
-  kafka-version: "{{ versions.apache_kafka }}"
-  kafka-exporter-version: "{{ versions.kafka_exporter }}"
-  jmx-exporter-version: "{{ versions.jmx_exporter }}"
-  strimzi-version: "{{ versions.strimzi_kafka_operator }}"
-
 package:
   name: strimzi-kafka
   version: "{{ versions.strimzi_kafka_operator }}"
@@ -43,7 +37,7 @@ pipeline:
   - uses: git-checkout
     with:
       repository: https://github.com/strimzi/strimzi-kafka-operator
-      tag: "${{ vars.strimzi-version }}"
+      tag: "{{ versions.strimzi_kafka_operator }}"
       destination: /tmp/strimzi-source
 
   # Can be removed, use defaults.
@@ -62,7 +56,7 @@ pipeline:
   - name: Download and install Kafka
     runs: |
       cd /tmp
-      curl -L "https://archive.apache.org/dist/kafka/${{vars.kafka-version}}/kafka_2.13-${{vars.kafka-version}}.tgz" -o kafka.tgz
+      curl -L "https://archive.apache.org/dist/kafka/{{ versions.apache_kafka }}/kafka_2.13-{{ versions.apache_kafka }}.tgz" -o kafka.tgz
       echo "00722AB0A6B954E0006994B8D589DCD8F26E1827C47F70B6E820FB45AA35945C19163B0F188CAF0CAF976C11F7AB005FD368C54E5851E899D2DE687A804A5EB9  kafka.tgz" | sha512sum -c
       tar -xzf kafka.tgz -C /opt/kafka --strip-components=1
       rm kafka.tgz
@@ -85,7 +79,7 @@ pipeline:
           exit 1
           ;;
       esac
-      curl -L "https://github.com/danielqsj/kafka_exporter/releases/download/v${{vars.kafka-exporter-version}}/kafka_exporter-${{vars.kafka-exporter-version}}.linux-${ARCH}.tar.gz" -o kafka_exporter.tar.gz
+      curl -L "https://github.com/danielqsj/kafka_exporter/releases/download/v{{ versions.kafka_exporter }}/kafka_exporter-{{ versions.kafka_exporter }}.linux-${ARCH}.tar.gz" -o kafka_exporter.tar.gz
       echo "${CHECKSUM}  kafka_exporter.tar.gz" | sha512sum -c
       tar -xzf kafka_exporter.tar.gz -C /opt/kafka-exporter --strip-components=1
       rm kafka_exporter.tar.gz
@@ -94,7 +88,7 @@ pipeline:
   - name: Download and install JMX Exporter
     runs: |
       cd /tmp
-      curl -L "https://github.com/prometheus/jmx_exporter/releases/download/${{vars.jmx-exporter-version}}/jmx_prometheus_javaagent-${{vars.jmx-exporter-version}}.jar" -o jmx_prometheus_javaagent.jar
+      curl -L "https://github.com/prometheus/jmx_exporter/releases/download/{{ versions.jmx_exporter }}/jmx_prometheus_javaagent-{{ versions.jmx_exporter }}.jar" -o jmx_prometheus_javaagent.jar
       echo "58b87e0c7f14cdbd3cdac3408e377be0bf0b30b3cd878669e94bf48181e878e3e4d30b2c2219c74da7f694fe85bcf81014520d84294da44e302247126bd92753  jmx_prometheus_javaagent.jar" | sha512sum -c
       mv jmx_prometheus_javaagent.jar /opt/prometheus-jmx-exporter/
 
@@ -117,11 +111,11 @@ pipeline:
   - name: Set environment variables
     runs: |
       echo "export KAFKA_HOME=/opt/kafka" >> /etc/environment
-      echo "export KAFKA_VERSION=${{vars.kafka-version}}" >> /etc/environment
+      echo "export KAFKA_VERSION={{ versions.apache_kafka }}" >> /etc/environment
       echo "export STRIMZI_VERSION=${{vars.strimzi-version}}" >> /etc/environment
       echo "export KAFKA_EXPORTER_HOME=/opt/kafka-exporter" >> /etc/environment
-      echo "export KAFKA_EXPORTER_VERSION=${{vars.kafka-exporter-version}}" >> /etc/environment
+      echo "export KAFKA_EXPORTER_VERSION={{ versions.kafka_exporter }}" >> /etc/environment
       echo "export JMX_EXPORTER_HOME=/opt/prometheus-jmx-exporter" >> /etc/environment
-      echo "export JMX_EXPORTER_VERSION=${{vars.jmx-exporter-version}}" >> /etc/environment
+      echo "export JMX_EXPORTER_VERSION={{ versions.jmx_exporter }}" >> /etc/environment
       echo "export CRUISE_CONTROL_HOME=/opt/cruise-control" >> /etc/environment
       echo "export PATH=$PATH:/opt/kafka/bin" >> /etc/environment
