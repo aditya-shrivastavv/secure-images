@@ -2,7 +2,7 @@ softwares:
 - name: strimzi_kafka_operator
   source: github_release
   identifier: strimzi/strimzi-kafka-operator
-  current_version: 0.46.1
+  current_version: 0.47.0
   options:
     allow_prerelease: false
     strip_prefix_v: true
