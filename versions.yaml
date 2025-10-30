@@ -30,7 +30,7 @@ softwares:
 - name: prometheus
   source: github_release
   identifier: prometheus/prometheus
-  current_version: 3.7.2
+  current_version: 3.7.3
   options:
     allow_prerelease: false
     strip_prefix_v: true
